@@ -3,6 +3,11 @@ from statistics import mean, StatisticsError
 
 DEFAULT_PLOT_SCOPE = 8064
 
+# if difference between local max and local min is
+# greater than this value, then the min is considered
+# as a diastolic point
+MIN_DIFFERENCE = 50
+
 
 class BVP:
     def __init__(self, x, y, freq):
@@ -63,7 +68,7 @@ class BVP:
 
         for i in extremes:
             if i[2] == "min":
-                if (last_x is not None) and (i[0] - last_x) > 50:
+                if (last_x is not None) and (i[0] - last_x) > MIN_DIFFERENCE:
                     diastolic_points.append(i)
 
             last_x = i[0]
