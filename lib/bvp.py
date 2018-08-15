@@ -94,7 +94,7 @@ class BVP:
             try:
                 bpm_value = self._interval_to_bpm(points[i][0] - points[i - 1][0])
                 #if 50 < bpm_value < 130:
-                results.append((round(points[i][0] * 1000), round(bpm_value, 2)))
+                results.append((round(points[i][0]), round(bpm_value, 2)))
             except TypeError:
                 continue
 
