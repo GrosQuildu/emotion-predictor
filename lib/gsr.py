@@ -3,11 +3,15 @@ from statistics import mean, StatisticsError
 
 
 class GSR:
-    def __init__(self, y, timestamps):
+    def __init__(self, y, timestamps, freq):
         self._y = y
         self._timestamps = timestamps
+        self._freq = freq
 
-    def match_timestamps(self, avg=True):
+    def match_timestamps(self, show_plot=False, avg=True):
+        if show_plot:
+            self._show_plot()
+
         results = []
         left = 0
 
@@ -33,3 +37,13 @@ class GSR:
             results.append((i[0], (i[1] - avg)))
 
         return results
+
+    def _show_plot(self):
+        x = list(range(0, len(self._y)))
+        plt.close('all')
+        plt.figure(figsize=(32, 6))
+        plt.plot(
+            x,
+            self._y
+        )
+        plt.show()
