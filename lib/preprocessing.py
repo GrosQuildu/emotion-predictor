@@ -10,7 +10,7 @@ CHANNELS = {
     'bvp': 38,
     'gsr': 36
 }
-
+#todo move
 DATA_FREQUENCY = 128
 
 
@@ -41,10 +41,10 @@ class Preprocessing:
             person_result.append(video_result)
 
         person_result = self._get_person_data_avg(person_result)
-        self._show_bpm_plot(person_result, 0)
-        self._show_bpm_plot(person_result, 1)
-        self._show_bpm_plot(person_result, 2)
-        self._show_bpm_plot(person_result, 3)
+        # self._show_bpm_plot(person_result, 0)
+        # self._show_bpm_plot(person_result, 10)
+        return person_result
+
     def _run_bvp(self, data):
         num = len(data[CHANNELS['bvp']])
         bvp = BVP(
@@ -99,6 +99,19 @@ class Preprocessing:
     def _show_bpm_plot(self, data, video_id):
         x = [i[0]/DATA_FREQUENCY for i in data[video_id]['bpm']]
         y = [i[1] for i in data[video_id]['bpm']]
+
+        plt.figure(figsize=(32, 6))
+        plt.plot(x, y, 'b-')
+        plt.title("BPM plot (valence={} , arousal={})".format(
+            data[video_id]['valence'],
+            data[video_id]['arousal']
+        ))
+        plt.grid()
+        plt.show()
+
+    def _show_gsr_plot(self, data, video_id):
+        x = [i[0] / DATA_FREQUENCY for i in data[video_id]['gsr']]
+        y = [i[1] for i in data[video_id]['gsr']]
 
         plt.figure(figsize=(32, 6))
         plt.plot(x, y, 'b-')
