@@ -2,6 +2,7 @@ from sklearn import model_selection
 from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
+from sklearn.neural_network import MLPClassifier
 
 
 VALIDATION_SIZE = 0.2
@@ -19,7 +20,8 @@ class AI:
     def test(self):
         #model = RandomForestClassifier(max_depth=8, n_estimators=100, max_features='auto', min_samples_split=3)
         #model = RandomForestClassifier()
-        model = SVC()
+        #model = SVC()
+        model = MLPClassifier()
 
         model.fit(self._x_tr, self._y_tr)
         predictions = model.predict(self._x_val)

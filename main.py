@@ -5,13 +5,12 @@ from lib.postprocessing import Postprocessing
 from lib.ai import AI
 from os import listdir
 from os.path import isfile, join
-from sklearn import preprocessing
 
 
 DATA_PATH = 'D:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_preprocessed_python'
 DATA_FREQUENCY = 128
 OUT_FILE = 'D:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\processed.dat'
-NEED_PREPROCESSING = False
+NEED_PREPROCESSING = True
 
 
 class Main:
@@ -35,7 +34,7 @@ class Main:
             pp = Postprocessing(DATA_FREQUENCY)
             print("Postprocessing")
             x, y = pp.make_data_tuples(people)
-            x_scaled = preprocessing.scale(x)
+            x_scaled = pp.standarize(x)
             print(x_scaled)
             ai = AI()
             ai.load_data(x_scaled, y)

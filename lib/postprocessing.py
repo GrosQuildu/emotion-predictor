@@ -1,5 +1,7 @@
 import lib.emotion as em
 from statistics import mean, StatisticsError
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 import sys
 
 
@@ -28,6 +30,14 @@ class Postprocessing:
                     y.append(emotion)
 
         return x, y
+
+    def normalize(self, data):
+        mms = MinMaxScaler()
+        return mms.fit_transform(data)
+
+    def standarize(self, data):
+        stdsc = StandardScaler()
+        return stdsc.fit_transform(data)
 
     def _get_avg_data(self, data, begin, end, window):
         avg_data = []
