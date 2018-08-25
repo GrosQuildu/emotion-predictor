@@ -41,7 +41,8 @@ class Postprocessing:
 
             # when loop reached end of the current window
             if i[0] > next_target:
-                avg_data.append(mean(values_to_mean))
+                if len(values_to_mean) > 0:
+                    avg_data.append(mean(values_to_mean))
                 values_to_mean = []
 
                 # current window was the last one, so we need to end the loop

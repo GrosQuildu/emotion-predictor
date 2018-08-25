@@ -21,7 +21,11 @@ class BVP:
         dy = np.zeros(self._y.shape, np.float)
         dy[0:-1] = np.diff(self._y) / np.diff(self._x)
         extremes = self._get_local_extremes(self._x, dy)
-        diastolic_points = self._get_diastolic_points(extremes)
+        diastolic_points = []
+        try:
+            diastolic_points = self._get_diastolic_points(extremes)
+        except StatisticsError:
+            show_plot=True
 
         bpm = self._dialistic_points_to_beats(diastolic_points)
 
@@ -29,7 +33,15 @@ class BVP:
             self._show_plot([i[0]/self._freq for i in bpm], [i[1] for i in bpm])
 
         if show_plot:
+            print(len(self._y))
             plt.close('all')
+
+            plt.figure(figsize=(128, 6))
+            plt.plot(self._x, self._y, 'b-')
+            plt.grid()
+            plt.title("Funkcja pierwotna")
+            plt.show()
+
             plt.figure(figsize=(32, 6))
             plt.plot(
                 self._x,
@@ -40,8 +52,8 @@ class BVP:
                 'ro'
             )
             plt.grid()
+            plt.title("Pochodna")
             plt.show()
-            return []
 
         return bpm
 
@@ -74,6 +86,8 @@ class BVP:
 
         counting = True
         maxima = []
+        value_sum = 0
+        n = 0
         for i in extremes:
             if i[2] == "min":
                 continue
@@ -87,8 +101,14 @@ class BVP:
 
             else:
                 counting = True
-                if i[1] > 150:
+                if value_sum == 0:
+                    avg = 150
+                else:
+                    avg = value_sum/n
+                if i[1] > avg/4:
                     maxima.append(i)
+                    value_sum += i[1]
+                    n += 1
 
         return self._filter_low_diastolic_points(diastolic_points)
         #return diastolic_points
@@ -106,6 +126,8 @@ class BVP:
         return None
 
     def _filter_low_diastolic_points(self, points):
+        if len(points) < 3:
+            return []
         result = []
         # for the first point we take not the neighbors, but the 2th and 3th point
         avg = mean([points[1][1], points[2][1]])

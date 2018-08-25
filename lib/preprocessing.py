@@ -27,18 +27,23 @@ class Preprocessing:
         data = self.load_data_from_file(file)
         person_result = []
         for i in range(len(data['data'])):
-            video_result = {}
-            bpm = self._run_bvp(data['data'][i])
-            timestamps = [el[0] for el in bpm]
-            gsr = self._run_gsr(data['data'][i], timestamps)
+            try:
+                #print(f"Working on {i}")
+                video_result = {}
+                bpm = self._run_bvp(data['data'][i])
+                timestamps = [el[0] for el in bpm]
+                gsr = self._run_gsr(data['data'][i], timestamps)
 
-            video_result = {
-                'bpm': bpm,
-                'gsr': gsr,
-                'valence': data['labels'][i][0],
-                'arousal': data['labels'][i][1]
-            }
-            person_result.append(video_result)
+                video_result = {
+                    'bpm': bpm,
+                    'gsr': gsr,
+                    'valence': data['labels'][i][0],
+                    'arousal': data['labels'][i][1]
+                }
+                person_result.append(video_result)
+            except StatisticsError:
+                print("Malformed data")
+                continue
 
         person_result = self._get_person_data_avg(person_result)
         # self._show_bpm_plot(person_result, 0)
