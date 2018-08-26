@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from lib.bvp import BVP
 from lib.gsr import GSR
 from statistics import mean, StatisticsError
+from sklearn.preprocessing import MinMaxScaler
 import sys
 
 
@@ -10,11 +11,12 @@ CHANNELS = {
     'bvp': 38,
     'gsr': 36
 }
-#todo move
-DATA_FREQUENCY = 128
 
 
 class Preprocessing:
+    def __init__(self, data_frequency):
+        self._data_frequency = data_frequency
+
     def load_data_from_file(self, file_path):
         loaded = numpy.load(file_path, allow_pickle=True, encoding='bytes')
 
@@ -28,7 +30,6 @@ class Preprocessing:
         person_result = []
         for i in range(len(data['data'])):
             try:
-                #print(f"Working on {i}")
                 video_result = {}
                 bpm = self._run_bvp(data['data'][i])
                 timestamps = [el[0] for el in bpm]
@@ -46,6 +47,15 @@ class Preprocessing:
                 continue
 
         person_result = self._get_person_data_avg(person_result)
+        # self._show_combined_plot(
+        #     person_result[0]['bpm'],
+        #     person_result[0]['gsr'],
+        #     person_result[0]['valence'],
+        #     person_result[0]['arousal'],
+        #     normalize=True
+        # )
+        # sys.exit(0)
+
         # self._show_bpm_plot(person_result, 0)
         # self._show_bpm_plot(person_result, 10)
         return person_result
@@ -55,7 +65,7 @@ class Preprocessing:
         bvp = BVP(
             list(range(0, num)),
             data[CHANNELS['bvp']],
-            DATA_FREQUENCY
+            self._data_frequency
         )
         return bvp.convert_to_bpm(show_plot=False, show_output_plot=False)
 
@@ -63,9 +73,9 @@ class Preprocessing:
         gsr = GSR(
             data[CHANNELS['gsr']],
             timestamps,
-            DATA_FREQUENCY
+            self._data_frequency
         )
-        return gsr.match_timestamps(show_plot=False)
+        return gsr.match_timestamps(show_plot=False, avg=False)
 
     def _get_person_data_avg(self, person_data):
         bpm_list = []
@@ -84,12 +94,13 @@ class Preprocessing:
         for i in person_data:
             new_bpm = []
             for j in i['bpm']:
-                new_bpm.append((j[0], j[1] - bpm_avg))
+                new_bpm.append((j[0], self._get_percentage_diff(j[1], bpm_avg)))
+
             i['bpm'] = new_bpm
 
             new_gsr = []
             for j in i['gsr']:
-                new_gsr.append((j[0], j[1] - gsr_avg))
+                new_gsr.append((j[0], self._get_percentage_diff(j[1], gsr_avg)))
             i['gsr'] = new_gsr
 
         return person_data
@@ -102,7 +113,7 @@ class Preprocessing:
         return results
 
     def _show_bpm_plot(self, data, video_id):
-        x = [i[0]/DATA_FREQUENCY for i in data[video_id]['bpm']]
+        x = [i[0] / self._data_frequency for i in data[video_id]['bpm']]
         y = [i[1] for i in data[video_id]['bpm']]
 
         plt.figure(figsize=(32, 6))
@@ -115,7 +126,7 @@ class Preprocessing:
         plt.show()
 
     def _show_gsr_plot(self, data, video_id):
-        x = [i[0] / DATA_FREQUENCY for i in data[video_id]['gsr']]
+        x = [i[0] / self._data_frequency for i in data[video_id]['gsr']]
         y = [i[1] for i in data[video_id]['gsr']]
 
         plt.figure(figsize=(32, 6))
@@ -126,3 +137,29 @@ class Preprocessing:
         ))
         plt.grid()
         plt.show()
+
+    def _show_combined_plot(self, bpm, gsr, valence, arousal, normalize=False):
+        x_bpm = []
+        y_bpm = []
+        for i in bpm:
+            x_bpm.append(i[0])
+            y_bpm.append(i[1])
+
+        x_gsr = []
+        y_gsr = []
+        for i in gsr:
+            x_gsr.append(i[0])
+            if normalize:
+                y_gsr.append(i[1]/1000)
+            else:
+                y_gsr.append(i[1])
+
+        plt.figure(figsize=(32, 6))
+        plt.plot(x_bpm, y_bpm, 'r-', x_gsr, y_gsr, 'b-')
+        plt.title(f"Combined plot (valence={valence} , arousal={arousal})")
+        plt.grid()
+        plt.show()
+
+    def _get_percentage_diff(self, value, avg):
+        diff = value - avg
+        return (diff/avg)*100

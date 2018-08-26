@@ -38,6 +38,10 @@ class Main:
             print(x_scaled)
             ai = AI()
             ai.load_data(x_scaled, y)
+
+            # print(x)
+            # ai = AI()
+            # ai.load_data(x, y)
             ai.test()
 
 
@@ -48,11 +52,13 @@ class Main:
 
     def _process_people(self, directory):
         files = [f for f in listdir(directory) if isfile(join(directory, f))]
-        preproc = Preprocessing()
+        preproc = Preprocessing(DATA_FREQUENCY)
         people = []
 
         print("Starting preprocessing")
         for file in files:
+            if file == "s13.dat":
+                break
             person = preproc.process_person(f"{DATA_PATH}/{file}")
             print(f"{file} done. Got data from {len(person)} videos.")
             people.append(person)

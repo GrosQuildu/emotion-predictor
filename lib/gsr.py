@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import sys
+import numpy as np
 from statistics import mean, StatisticsError
 
 
@@ -11,6 +13,7 @@ class GSR:
     def match_timestamps(self, show_plot=False, avg=True):
         if show_plot:
             self._show_plot()
+            # sys.exit(0)
 
         results = []
         left = 0
@@ -40,10 +43,45 @@ class GSR:
 
     def _show_plot(self):
         x = list(range(0, len(self._y)))
+        y = [i/20 for i in self._y]
+        inv = self._convert(self._y)
         plt.close('all')
         plt.figure(figsize=(32, 6))
         plt.plot(
             x,
-            self._y
+            y,
+            'b-'
         )
+        plt.grid()
         plt.show()
+
+    def _convert(self, y):
+        result = []
+        for value in y:
+            result.append(self._geneva_to_twente(value))
+            # result.append(new_value)
+
+        return result
+
+    def _ohm_to_microsiemens(self, ohm):
+        return (1 / ohm) * 1000.0
+
+    def _geneva_to_twente(self, value):
+        return (10**9)/value
+
+    def _prepare(self, y):
+
+        mini = min(y)
+        result = []
+
+        for value in y:
+            result.append(value-mini)
+
+        return result
+
+    def _get_derivative(self, y):
+        x = list(range(0, len(self._y)))
+        dy = np.zeros(y.shape, np.float)
+        dy[0:-1] = np.diff(y) / np.diff(x)
+
+        return dy
