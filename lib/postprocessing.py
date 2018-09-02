@@ -20,14 +20,12 @@ class Postprocessing:
 
         for person in people:
             for image in person:
-                bpm = self._get_avg_data(image['bpm'], DATA_BEGIN_SEC, DATA_END_SEC, WINDOW_SIZE_SEC)
-                gsr = self._get_avg_data(image['gsr'], DATA_BEGIN_SEC, DATA_END_SEC, WINDOW_SIZE_SEC)
-
+                if not image['bpm'] or not image['gsr']:
+                    continue
                 emotion = em.get_class_for_values(image['valence'], image['arousal'])
 
-                for i in range(0, len(bpm)-1):
-                    x.append((bpm[i], gsr[i]))
-                    y.append(emotion)
+                x.append((image['bpm'], image['gsr']))
+                y.append(emotion)
 
         return x, y
 
@@ -37,6 +35,7 @@ class Postprocessing:
 
     def standarize(self, data):
         stdsc = StandardScaler()
+        print(data)
         return stdsc.fit_transform(data)
 
     def _get_avg_data(self, data, begin, end, window):

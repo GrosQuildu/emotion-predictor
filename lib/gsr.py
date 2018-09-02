@@ -10,6 +10,21 @@ class GSR:
         self._timestamps = timestamps
         self._freq = freq
 
+    #### METHODS ADDED IN EXPERIMENTAL VERSION ###########
+
+    def get_dropping_time(self):
+        n = 0
+        for value in self._y:
+            if value < 0:
+                n += 1
+
+        return n / self._freq
+
+    def get_avg_resistance(self):
+        return mean(self._y)
+
+    #### METHODS FROM ORIGINAL VERSION ###################
+
     def match_timestamps(self, show_plot=False, avg=True):
         if show_plot:
             self._show_plot()

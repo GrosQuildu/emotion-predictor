@@ -32,6 +32,11 @@ class Preprocessing:
             try:
                 video_result = {}
                 bpm = self._run_bvp(data['data'][i])
+                if bpm == 0.0:
+                    print("Fatal error")
+                    print(file)
+                    print(i)
+                    sys.exit(0)
                 timestamps = [el[0] for el in bpm]
                 gsr = self._run_gsr(data['data'][i], timestamps)
 
@@ -47,6 +52,7 @@ class Preprocessing:
                 continue
 
         person_result = self._get_person_data_avg(person_result)
+
         # self._show_combined_plot(
         #     person_result[0]['bpm'],
         #     person_result[0]['gsr'],
@@ -75,33 +81,24 @@ class Preprocessing:
             timestamps,
             self._data_frequency
         )
-        return gsr.match_timestamps(show_plot=False, avg=False)
+        return gsr.get_avg_resistance()
 
     def _get_person_data_avg(self, person_data):
-        bpm_list = []
-        gsr_list = []
+        bpm_list = None
+        for video in person_data:
+            if not video['bpm']:
+                continue
+            bpm_list = [i[1] for i in video['bpm']]
 
-        for i in person_data:
-            for j in i['bpm']:
-                bpm_list.append(j[1])
-
-            for j in i['gsr']:
-                gsr_list.append(j[1])
-
+        # average BPM for given person during all the experiment
         bpm_avg = mean(bpm_list)
-        gsr_avg = mean(gsr_list)
 
-        for i in person_data:
-            new_bpm = []
-            for j in i['bpm']:
-                new_bpm.append((j[0], self._get_percentage_diff(j[1], bpm_avg)))
-
-            i['bpm'] = new_bpm
-
-            new_gsr = []
-            for j in i['gsr']:
-                new_gsr.append((j[0], self._get_percentage_diff(j[1], gsr_avg)))
-            i['gsr'] = new_gsr
+        for video in person_data:
+            if not video['bpm']:
+                continue
+            current_bpm = [j[1] for j in video['bpm']]
+            current_bpm_avg = mean(current_bpm)
+            video['bpm'] = current_bpm_avg - bpm_avg
 
         return person_data
 
