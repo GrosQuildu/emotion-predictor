@@ -2,6 +2,7 @@ import numpy
 import matplotlib.pyplot as plt
 from lib.bvp import BVP
 from lib.gsr import GSR
+from lib.originals import Originals
 from statistics import mean, StatisticsError
 from sklearn.preprocessing import MinMaxScaler
 import sys
@@ -16,6 +17,7 @@ CHANNELS = {
 class Preprocessing:
     def __init__(self, data_frequency):
         self._data_frequency = data_frequency
+        self._org = Originals()
 
     def load_data_from_file(self, file_path):
         loaded = numpy.load(file_path, allow_pickle=True, encoding='bytes')
@@ -25,7 +27,9 @@ class Preprocessing:
             'labels': loaded[b'labels']
         }
 
-    def process_person(self, file):
+    def process_person(self, file, original_file, file_number):
+        base_bvp, base_gsr = self._org.get_person_resting_values(original_file, file_number)
+        # todo convert bvp to bpm, get avg values
         data = self.load_data_from_file(file)
         person_result = []
         for i in range(len(data['data'])):
@@ -67,7 +71,7 @@ class Preprocessing:
             data[CHANNELS['bvp']],
             self._data_frequency
         )
-        return bvp.convert_to_bpm(show_plot=False, show_output_plot=False)
+        return bvp.convert_to_bpm(show_plot=True, show_output_plot=True)
 
     def _run_gsr(self, data, timestamps):
         gsr = GSR(
