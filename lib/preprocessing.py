@@ -2,6 +2,7 @@ import numpy
 import matplotlib.pyplot as plt
 from lib.bvp import BVP
 from lib.gsr import GSR
+from lib.originals import Originals
 from statistics import mean, StatisticsError
 from sklearn.preprocessing import MinMaxScaler
 import sys
@@ -16,6 +17,7 @@ CHANNELS = {
 class Preprocessing:
     def __init__(self, data_frequency):
         self._data_frequency = data_frequency
+        self._org = Originals()
 
     def load_data_from_file(self, file_path):
         loaded = numpy.load(file_path, allow_pickle=True, encoding='bytes')
@@ -25,12 +27,14 @@ class Preprocessing:
             'labels': loaded[b'labels']
         }
 
-    def process_person(self, file):
+    def process_person(self, file, original_file, file_number):
+        base_bvp, base_gsr = self._org.get_person_resting_values(original_file, file_number)
+        avg_bpm = self._get_avg_bpm(base_bvp)
+        avg_gsr = self._get_avg_gsr(base_gsr)
         data = self.load_data_from_file(file)
         person_result = []
         for i in range(len(data['data'])):
             try:
-                video_result = {}
                 bpm = self._run_bvp(data['data'][i])
                 timestamps = [el[0] for el in bpm]
                 gsr = self._run_gsr(data['data'][i], timestamps)
@@ -46,7 +50,7 @@ class Preprocessing:
                 print("Malformed data")
                 continue
 
-        person_result = self._get_person_data_avg(person_result)
+        person_result = self._get_person_data_avg(person_result, avg_bpm, avg_gsr)
         # self._show_combined_plot(
         #     person_result[0]['bpm'],
         #     person_result[0]['gsr'],
@@ -77,30 +81,20 @@ class Preprocessing:
         )
         return gsr.match_timestamps(show_plot=False, avg=False)
 
-    def _get_person_data_avg(self, person_data):
-        bpm_list = []
-        gsr_list = []
-
-        for i in person_data:
-            for j in i['bpm']:
-                bpm_list.append(j[1])
-
-            for j in i['gsr']:
-                gsr_list.append(j[1])
-
-        bpm_avg = mean(bpm_list)
-        gsr_avg = mean(gsr_list)
-
+    def _get_person_data_avg(self, person_data, bpm_avg, gsr_avg):
         for i in person_data:
             new_bpm = []
             for j in i['bpm']:
-                new_bpm.append((j[0], self._get_percentage_diff(j[1], bpm_avg)))
+                #new_bpm.append((j[0], self._get_percentage_diff(j[1], bpm_avg)))
+                new_bpm.append((j[0], bpm_avg - j[1]))
 
             i['bpm'] = new_bpm
 
             new_gsr = []
             for j in i['gsr']:
-                new_gsr.append((j[0], self._get_percentage_diff(j[1], gsr_avg)))
+                # new_gsr.append((j[0], self._get_percentage_diff(j[1], gsr_avg)))
+                new_gsr.append((j[0], gsr_avg - j[1]))
+
             i['gsr'] = new_gsr
 
         return person_data
@@ -163,3 +157,15 @@ class Preprocessing:
     def _get_percentage_diff(self, value, avg):
         diff = value - avg
         return (diff/avg)*100
+
+    def _get_avg_bpm(self, bvp):
+        bvp = BVP(
+            list(range(len(bvp))),
+            bvp,
+            self._data_frequency
+        )
+        bpm = bvp.convert_to_bpm(show_plot=False, show_output_plot=False)
+        return mean([i[1] for i in bpm])
+
+    def _get_avg_gsr(self, gsr):
+        return mean(gsr)

@@ -1,5 +1,7 @@
 import sys
 import pickle
+import re
+import scipy
 from lib.preprocessing import Preprocessing
 from lib.postprocessing import Postprocessing
 from lib.ai import AI
@@ -7,9 +9,10 @@ from os import listdir
 from os.path import isfile, join
 
 
-DATA_PATH = 'D:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_preprocessed_python'
+DATA_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_preprocessed_python'
+ORIGINALS_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_original_bdf'
 DATA_FREQUENCY = 128
-OUT_FILE = 'D:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\processed.dat'
+OUT_FILE = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\processed.dat'
 NEED_PREPROCESSING = True
 
 
@@ -35,7 +38,6 @@ class Main:
             print("Postprocessing")
             x, y = pp.make_data_tuples(people)
             x_scaled = pp.standarize(x)
-            print(x_scaled)
             ai = AI()
             ai.load_data(x_scaled, y)
 
@@ -59,7 +61,13 @@ class Main:
         for file in files:
             if file == "s13.dat":
                 break
-            person = preproc.process_person(f"{DATA_PATH}/{file}")
+
+            number = self._get_file_number(file)
+            person = preproc.process_person(
+                f"{DATA_PATH}/{file}",
+                f"{ORIGINALS_PATH}/s{number}.bdf",
+                number
+            )
             print(f"{file} done. Got data from {len(person)} videos.")
             people.append(person)
             print(f"Done {file}")
@@ -74,6 +82,10 @@ class Main:
     def _read_from_file(self):
         with open(OUT_FILE, 'rb') as fp:
             return pickle.load(fp)
+
+    def _get_file_number(self, name):
+        m = re.search("s([0-9]{2})\.", name)
+        return m.group(1)
 
 
 if __name__ == '__main__':
