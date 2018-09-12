@@ -2,7 +2,10 @@ import numpy as np
 import pyedflib as bdf
 import sys
 import matplotlib.pyplot as plt
+import datetime
+import struct
 
+ORIGINALS_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_original_bdf'
 
 GSR = 40
 BVP = 45
@@ -19,7 +22,7 @@ class Originals:
 
         rest_bvp = self._get_resting_data(bvp_signal, begin, end)
         rest_gsr = self._get_resting_data(gsr_signal, begin, end)
-        if number > 22:
+        if int(number) < 23:
             rest_gsr = self._convert_gsr_values(rest_gsr)
 
         return rest_bvp, rest_gsr
@@ -27,15 +30,42 @@ class Originals:
     def _get_resting_markers(self, status):
         current = None
         last_index = 0
+        sum = 0
+
+        begin = None
+        end = None
+        mode = 0
+
+        # print(f"0:00:00: start of the experiment")
         for index, value in enumerate(status):
+            value = self.get_least_byte(int(value))
             if value != current:
-                current = value
+                if value == 6:
+                    continue
+
                 change = (index - last_index) / 512
-                if 119 < change < 121:
-                    return last_index, index
+                sum += change
+                time = datetime.timedelta(seconds=sum)
+                # print(f"{# time}: Value {current} length {change}s , mode={mode}")
+                if current == 1:
+                    mode += 1
+
+                if current == 0 and mode == 2:
+                    begin = last_index
+                    end = index
+                    break
+                current = value
                 last_index = index
 
-        raise Exception("No resting time found")
+        seconds = (end - begin) / 512
+        time_duration = datetime.timedelta(seconds=seconds)
+        # print(f"Resting length: {time_duration}")
+        # sys.exit(0)
+
+        if not begin or not end:
+            raise Exception("No resting time found")
+
+        return begin, end
 
     def _get_resting_data(self, signal, begin, end):
         resting = []
@@ -51,12 +81,23 @@ class Originals:
         return resting[::4]
 
     def _get_absolute_file_name(self, number):
-        return "{}s{}.bdf".format(BASE_PATH, number)
+        return "{}s{}.bdf".format(ORIGINALS_PATH, number)
 
     def _convert_gsr_values(self, values):
-        # TODO: implement converter
-        return values
+        new_values = []
+        for v in values:
+            converted = (10**9)/v
+            new_values.append(converted)
 
+        return new_values
 
-originals = Originals()
-originals.get_base_values()
+    def get_least_byte(self, value):
+        result = []
+
+        for i in range(0, 1):
+            result.append(value >> (i * 8) & 0xff)
+
+        result.reverse()
+
+        return result[0]
+

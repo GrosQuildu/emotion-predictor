@@ -14,7 +14,10 @@ MIN_Y_DIFFERENCE = 600
 class BVP:
     def __init__(self, x, y, freq):
         self._x = x
-        self._y = y
+        if isinstance(y, list):
+            self._y = np.asarray(y)
+        else:
+            self._y = y
         self._freq = freq
 
     def convert_to_bpm(self, show_plot=False, show_output_plot=False):

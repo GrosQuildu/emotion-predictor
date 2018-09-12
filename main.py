@@ -38,7 +38,6 @@ class Main:
             print("Postprocessing")
             x, y = pp.make_data_tuples(people)
             x_scaled = pp.standarize(x)
-            print(x_scaled)
             ai = AI()
             ai.load_data(x_scaled, y)
 
@@ -65,8 +64,9 @@ class Main:
 
             number = self._get_file_number(file)
             person = preproc.process_person(
-                f"{DATA_PATH}/{file}"
-                f"{ORIGINALS_PATH}/s{number}.bdf"
+                f"{DATA_PATH}/{file}",
+                f"{ORIGINALS_PATH}/s{number}.bdf",
+                number
             )
             print(f"{file} done. Got data from {len(person)} videos.")
             people.append(person)
