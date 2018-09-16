@@ -1,6 +1,7 @@
 import numpy
 import matplotlib.pyplot as plt
 from lib.bvp import BVP
+from lib.new_bvp import NewBVP
 from lib.gsr import GSR
 from lib.originals import Originals
 from statistics import mean, StatisticsError
@@ -71,7 +72,7 @@ class Preprocessing:
 
     def _run_bvp(self, data):
         num = len(data[CHANNELS['bvp']])
-        bvp = BVP(
+        bvp = NewBVP(
             list(range(0, num)),
             data[CHANNELS['bvp']],
             self._data_frequency
@@ -164,13 +165,12 @@ class Preprocessing:
         return (diff/avg)*100
 
     def _get_avg_bpm(self, bvp):
-        bvp = BVP(
+        bvp = NewBVP(
             list(range(len(bvp))),
             bvp,
             self._data_frequency
         )
-        bpm = bvp.convert_to_bpm(show_plot=False, show_output_plot=False)
-        return mean([i[1] for i in bpm])
+        return bvp.convert_to_bpm(show_plot=False, show_output_plot=False)
 
     def _get_avg_gsr(self, gsr):
         return mean(gsr)

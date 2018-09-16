@@ -71,6 +71,7 @@ class Main:
             print(f"{file} done. Got data from {len(person)} videos.")
             people.append(person)
             print(f"Done {file}")
+            sys.exit(0)
 
         print("Preprocessing finished")
         return people
