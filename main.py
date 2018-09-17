@@ -12,7 +12,7 @@ DATA_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological
 ORIGINALS_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_original_bdf'
 DATA_FREQUENCY = 128
 OUT_FILE = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\processed.dat'
-NEED_PREPROCESSING = False
+NEED_PREPROCESSING = True
 
 
 class Main:
