@@ -1,7 +1,6 @@
 import sys
 import pickle
 import re
-import scipy
 from lib.preprocessing import Preprocessing
 from lib.postprocessing import Postprocessing
 from lib.ai import AI
@@ -13,7 +12,7 @@ DATA_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological
 ORIGINALS_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_original_bdf'
 DATA_FREQUENCY = 128
 OUT_FILE = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\processed.dat'
-NEED_PREPROCESSING = True
+NEED_PREPROCESSING = False
 
 
 class Main:
@@ -68,10 +67,8 @@ class Main:
                 f"{ORIGINALS_PATH}/s{number}.bdf",
                 number
             )
-            print(f"{file} done. Got data from {len(person)} videos.")
             people.append(person)
-            print(f"Done {file}")
-            sys.exit(0)
+            print(f"{file} done. Got data from {len(person)} videos.")
 
         print("Preprocessing finished")
         return people

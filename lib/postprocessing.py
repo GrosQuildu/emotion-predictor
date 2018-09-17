@@ -35,7 +35,7 @@ class Postprocessing:
 
     def standarize(self, data):
         stdsc = StandardScaler()
-        print(data)
+        # print(data)
         return stdsc.fit_transform(data)
 
     def _get_avg_data(self, data, begin, end, window):

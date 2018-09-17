@@ -28,6 +28,15 @@ class Originals:
         return rest_bvp, rest_gsr
 
     def _get_resting_markers(self, status):
+        markers = self._get_resting_markers_by_signal(status)
+        if not markers:
+            markers = self._get_resting_markers_by_time(status)
+            if not markers:
+                raise Exception("No resting time found")
+
+        return markers
+
+    def _get_resting_markers_by_signal(self, status):
         current = None
         last_index = 0
         sum = 0
@@ -45,7 +54,7 @@ class Originals:
 
                 change = (index - last_index) / 512
                 sum += change
-                time = datetime.timedelta(seconds=sum)
+                # time = datetime.timedelta(seconds=sum)
                 # print(f"{# time}: Value {current} length {change}s , mode={mode}")
                 if current == 1:
                     mode += 1
@@ -58,12 +67,36 @@ class Originals:
                 last_index = index
 
         seconds = (end - begin) / 512
-        time_duration = datetime.timedelta(seconds=seconds)
-        # print(f"Resting length: {time_duration}")
-        # sys.exit(0)
 
-        if not begin or not end:
-            raise Exception("No resting time found")
+        if (seconds < 30) or not begin or not end:
+            return None
+
+        return begin, end
+
+    def _get_resting_markers_by_time(self, status):
+        current = None
+        last_index = 0
+
+        begin = None
+        end = None
+
+        for index, value in enumerate(status):
+            value = self.get_least_byte(int(value))
+            if value != current:
+                if value == 6:
+                    continue
+
+                change = (index - last_index) / 512
+                if 100 < change < 130:
+                    begin = last_index
+                    end = index
+                    break
+
+                current = value
+                last_index = index
+
+        if begin is None or end is None:
+            return None
 
         return begin, end
 
@@ -100,4 +133,16 @@ class Originals:
         result.reverse()
 
         return result[0]
+
+    def plot(self, data):
+        x = list(range(0, len(data)))
+        plt.close('all')
+        plt.figure(figsize=(32, 6))
+        plt.plot(
+            x,
+            data,
+            'r-'
+        )
+        plt.grid()
+        plt.show()
 

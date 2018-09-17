@@ -1,5 +1,6 @@
 import numpy
 import matplotlib.pyplot as plt
+import scipy.fftpack
 from lib.bvp import BVP
 from lib.new_bvp import NewBVP
 from lib.gsr import GSR
@@ -42,8 +43,8 @@ class Preprocessing:
                     print(file)
                     print(i)
                     sys.exit(0)
-                timestamps = [el[0] for el in bpm]
-                gsr = self._run_gsr(data['data'][i], timestamps)
+                # timestamps = [el[0] for el in bpm]
+                gsr = self._run_gsr(data['data'][i], None)
 
                 video_result = {
                     'bpm': bpm,
@@ -52,22 +53,11 @@ class Preprocessing:
                     'arousal': data['labels'][i][1]
                 }
                 person_result.append(video_result)
-            except StatisticsError:
-                print("Malformed data")
+            except Exception:
+                print(f"Malformed data when processing video {i}")
                 continue
 
-        person_result = self._get_person_data_avg(person_result, avg_bpm, avg_gsr)
-        # self._show_combined_plot(
-        #     person_result[0]['bpm'],
-        #     person_result[0]['gsr'],
-        #     person_result[0]['valence'],
-        #     person_result[0]['arousal'],
-        #     normalize=True
-        # )
-        # sys.exit(0)
-
-        # self._show_bpm_plot(person_result, 0)
-        # self._show_bpm_plot(person_result, 10)
+        person_result = self._get_person_data_diff(person_result, avg_bpm, avg_gsr)
         return person_result
 
     def _run_bvp(self, data):
@@ -85,23 +75,13 @@ class Preprocessing:
             timestamps,
             self._data_frequency
         )
+        # return gsr.get_dropping_time()
         return gsr.get_avg_resistance()
 
-    def _get_person_data_avg(self, person_data, bpm_avg, gsr_avg):
+    def _get_person_data_diff(self, person_data, bpm_avg, gsr_avg):
         for i in person_data:
-            new_bpm = []
-            for j in i['bpm']:
-                #new_bpm.append((j[0], self._get_percentage_diff(j[1], bpm_avg)))
-                new_bpm.append((j[0], bpm_avg - j[1]))
-
-            i['bpm'] = new_bpm
-
-            new_gsr = []
-            for j in i['gsr']:
-                # new_gsr.append((j[0], self._get_percentage_diff(j[1], gsr_avg)))
-                new_gsr.append((j[0], gsr_avg - j[1]))
-
-            i['gsr'] = new_gsr
+            i['bpm'] = bpm_avg - i['bpm']
+            i['gsr'] = gsr_avg - i['gsr']
 
         return person_data
 
