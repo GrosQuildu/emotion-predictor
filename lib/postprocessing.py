@@ -20,11 +20,19 @@ class Postprocessing:
 
         for person in people:
             for image in person:
-                if not image['bpm'] or not image['mad'] or not image['gsr']:
+                if not image['heart'] or not image['gsr']:
                     continue
                 emotion = em.get_class_for_values(image['valence'], image['arousal'])
 
-                x.append((image['bpm'], image['mad'], image['gsr']))
+                bpm_attr_list = []
+                for key in image['heart']:
+                    bpm_attr_list.append(image['heart'][key])
+
+                gsr_attr_list = []
+                for key in image['gsr']:
+                    gsr_attr_list.append(image['gsr'][key])
+
+                x.append(bpm_attr_list + gsr_attr_list)
                 y.append(emotion)
 
         return x, y

@@ -31,26 +31,24 @@ class Preprocessing:
 
     def process_person(self, file, original_file, file_number):
         base_bvp, base_gsr = self._org.get_person_resting_values(original_file, file_number)
-        avg_bpm, avg_mad = self._get_avg_bpm(base_bvp)
-        avg_gsr, avg_drop = self._get_avg_gsr(base_gsr)
+        heart_avg = self._get_avg_bpm(base_bvp)
+        gsr_avg = self._get_avg_gsr(base_gsr)
         data = self.load_data_from_file(file)
         person_result = []
         for i in range(len(data['data'])):
             try:
-                bpm, mad = self._run_bvp(data['data'][i])
-                if bpm == 0.0:
+                heart = self._run_bvp(data['data'][i])
+                if heart['bpm'] == 0.0:
                     print("Fatal error")
                     print(file)
                     print(i)
                     sys.exit(0)
                 # timestamps = [el[0] for el in bpm]
-                gsr, drop = self._run_gsr(data['data'][i], None)
+                gsr = self._run_gsr(data['data'][i], None)
 
                 video_result = {
-                    'bpm': bpm,
-                    'mad': mad,
+                    'heart': heart,
                     'gsr': gsr,
-                    # 'drop': drop,
                     'valence': data['labels'][i][0],
                     'arousal': data['labels'][i][1]
                 }
@@ -59,7 +57,7 @@ class Preprocessing:
                 print(f"Malformed data when processing video {i}")
                 continue
 
-        person_result = self._get_person_data_diff(person_result, avg_bpm, avg_mad, avg_gsr)
+        person_result = self._get_person_data_diff(person_result, heart_avg, gsr_avg)
         return person_result
 
     def _run_bvp(self, data):
@@ -74,16 +72,17 @@ class Preprocessing:
     def _run_gsr(self, data, timestamps):
         gsr = GSR(
             data[CHANNELS['gsr']],
-            timestamps,
             self._data_frequency
         )
-        return gsr.get_avg_resistance(), gsr.get_dropping_time()
+        return gsr.convert()
 
-    def _get_person_data_diff(self, person_data, bpm_avg, mad_avg, gsr_avg):
+    def _get_person_data_diff(self, person_data, heart_avg, gsr_avg):
         for i in person_data:
-            i['bpm'] = bpm_avg - i['bpm']
-            i['mad'] = mad_avg - i['mad']
-            i['gsr'] = gsr_avg - i['gsr']
+            for key in i['heart']:
+                i['heart'][key] = heart_avg[key] - i['heart'][key]
+
+            for key in i['gsr']:
+                i['gsr'][key] = gsr_avg[key] - i['gsr'][key]
 
         return person_data
 
@@ -155,6 +154,5 @@ class Preprocessing:
         return bvp.convert_to_bpm(show_plot=False, show_output_plot=False)
 
     def _get_avg_gsr(self, gsr):
-        avg = mean(gsr)
-        drop = GSR(gsr, None, self._data_frequency).get_dropping_time()
-        return avg, drop
+        gsr = GSR(gsr, self._data_frequency)
+        return gsr.convert()

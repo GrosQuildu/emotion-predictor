@@ -5,23 +5,56 @@ from statistics import mean, StatisticsError
 
 
 class GSR:
-    def __init__(self, y, timestamps, freq):
+    def __init__(self, y, freq):
         self._y = y
-        self._timestamps = timestamps
         self._freq = freq
+        self._derivative = self._get_derivative(y)
 
     #### METHODS ADDED IN EXPERIMENTAL VERSION ###########
 
-    def get_dropping_time(self):
+    def convert(self):
+        return {
+            'avg_gsr': self.avg()
+        }
+
+    def avg(self):
+        return mean(self._y)
+
+    def derivative_avg(self):
+        return mean(self._derivative)
+
+    def decrease_rate_avg(self):
+        values = []
+        for value in self._derivative:
+            if value < 0:
+                values.append(value)
+
+        return mean(values)
+
+    def derivative_negative_to_all(self):
         n = 0
-        for value in self._y:
+        for value in self._derivative:
             if value < 0:
                 n += 1
 
-        return n / self._freq
+        return n/len(self._derivative)
 
-    def get_avg_resistance(self):
-        return mean(self._y)
+    def local_minima_count(self):
+        n = 0
+        for i in range(1, len(self._derivative)-1):
+            if self._derivative[i-1] > self._derivative[i] and \
+            self._derivative[i+1] > self._derivative[i]:
+                n += 1
+
+        return n
+
+    def rising_time(self):
+        n = 0
+        for value in self._derivative:
+            if value > 0:
+                n += 1
+
+        return n / self._freq
 
     #### METHODS FROM ORIGINAL VERSION ###################
 
@@ -96,7 +129,7 @@ class GSR:
 
     def _get_derivative(self, y):
         x = list(range(0, len(self._y)))
-        dy = np.zeros(y.shape, np.float)
+        dy = np.zeros(np.array(y).shape, np.float)
         dy[0:-1] = np.diff(y) / np.diff(x)
 
         return dy
