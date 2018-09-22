@@ -14,7 +14,8 @@ class GSR:
 
     def convert(self):
         return {
-            'avg_gsr': self.avg()
+            'avg_gsr': self.avg(),
+            'local_maxima': self.local_maxima_count()
         }
 
     def avg(self):
@@ -44,6 +45,15 @@ class GSR:
         for i in range(1, len(self._derivative)-1):
             if self._derivative[i-1] > self._derivative[i] and \
             self._derivative[i+1] > self._derivative[i]:
+                n += 1
+
+        return n
+
+    def local_maxima_count(self):
+        n = 0
+        for i in range(1, len(self._derivative) - 1):
+            if self._derivative[i - 1] < self._derivative[i] and \
+                    self._derivative[i + 1] < self._derivative[i]:
                 n += 1
 
         return n
