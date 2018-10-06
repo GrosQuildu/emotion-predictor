@@ -1,12 +1,8 @@
 import numpy
 import matplotlib.pyplot as plt
-import scipy.fftpack
-from lib.bvp import BVP
 from lib.new_bvp import NewBVP
-from lib.gsr import GSR
+from lib.new_gsr import NewGSR
 from lib.originals import Originals
-from statistics import mean, StatisticsError
-from sklearn.preprocessing import MinMaxScaler
 import sys
 
 
@@ -17,9 +13,10 @@ CHANNELS = {
 
 
 class Preprocessing:
-    def __init__(self, data_frequency):
+    def __init__(self, data_frequency, extract_all_features=False):
         self._data_frequency = data_frequency
         self._org = Originals()
+        self._extract_all_features = extract_all_features
 
     def load_data_from_file(self, file_path):
         loaded = numpy.load(file_path, allow_pickle=True, encoding='bytes')
@@ -32,7 +29,7 @@ class Preprocessing:
     def process_person(self, file, original_file, file_number):
         base_bvp, base_gsr = self._org.get_person_resting_values(original_file, file_number)
         heart_avg = self._get_avg_bpm(base_bvp)
-        gsr_avg = self._get_avg_gsr(base_gsr)
+        gsr_avg = self._get_avg_gsr(base_gsr, "avg_{}".format(file_number))
         data = self.load_data_from_file(file)
         person_result = []
         for i in range(len(data['data'])):
@@ -44,7 +41,7 @@ class Preprocessing:
                     print(i)
                     sys.exit(0)
                 # timestamps = [el[0] for el in bpm]
-                gsr = self._run_gsr(data['data'][i], None)
+                gsr = self._run_gsr(data['data'][i], "video_{}_{}".format(file_number, i))
 
                 video_result = {
                     'heart': heart,
@@ -67,14 +64,16 @@ class Preprocessing:
             data[CHANNELS['bvp']],
             self._data_frequency
         )
-        return bvp.convert_to_bpm(show_plot=False, show_output_plot=False)
+        return bvp.get_features(extract_all_features=self._extract_all_features)
 
-    def _run_gsr(self, data, timestamps):
-        gsr = GSR(
+    def _run_gsr(self, data, filename):
+        gsr = NewGSR(
             data[CHANNELS['gsr']],
-            self._data_frequency
+            self._data_frequency,
+            filename=filename,
+            file=False
         )
-        return gsr.convert()
+        return gsr.get_features(extract_all_features=self._extract_all_features)
 
     def _get_person_data_diff(self, person_data, heart_avg, gsr_avg):
         for i in person_data:
@@ -151,8 +150,12 @@ class Preprocessing:
             bvp,
             self._data_frequency
         )
-        return bvp.convert_to_bpm(show_plot=False, show_output_plot=False)
+        return bvp.get_features(extract_all_features=self._extract_all_features)
 
-    def _get_avg_gsr(self, gsr):
-        gsr = GSR(gsr, self._data_frequency)
-        return gsr.convert()
+    def _get_avg_gsr(self, gsr, filename):
+        gsr = NewGSR(gsr, 512, filename=filename, file=False)
+        return gsr.get_features(extract_all_features=self._extract_all_features)
+
+    @staticmethod
+    def get_labels():
+        return NewBVP.labels + NewGSR.labels

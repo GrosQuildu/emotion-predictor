@@ -1,21 +1,27 @@
 import matplotlib.pyplot as plt
 import sys
 import numpy as np
+import copy
+import imp
+from array import array
 from statistics import mean, StatisticsError
+from biosppy.signals import eda
+from pprint import pprint
 
 
 class GSR:
     def __init__(self, y, freq):
-        self._y = y
+        self._y = copy.deepcopy(y)
         self._freq = freq
-        self._derivative = self._get_derivative(y)
+        self._derivative = self._get_derivative(copy.deepcopy(y))
+        self.data = eda.eda(signal=copy.deepcopy(y), sampling_rate=copy.deepcopy(freq), show=False)
 
     #### METHODS ADDED IN EXPERIMENTAL VERSION ###########
 
     def convert(self):
         return {
-            'avg_gsr': self.avg(),
-            'local_maxima': self.local_maxima_count()
+            'avg_gsr': self.avg()
+            # 'peak_count': self.peek_count()
         }
 
     def avg(self):
@@ -65,6 +71,35 @@ class GSR:
                 n += 1
 
         return n / self._freq
+
+    def peek_count(self):
+        self._process_eda_signal()
+
+        return len(self.data['peaks'])
+
+    def peek_avg(self):
+        self._process_eda_signal()
+
+        val = 0
+        for peak in self.data['peaks']:
+            val += peak
+
+        try:
+            return val / len(self.data['peaks'])
+        except ZeroDivisionError:
+            return 0
+
+    def ampl_avg(self):
+        self._process_eda_signal()
+
+        try:
+            return mean(self.data['amplitudes'])
+        except StatisticsError:
+            return 0
+
+    def _process_eda_signal(self):
+        if not self.data:
+            self.data = eda.kbk_scr(signal=copy.deepcopy(self._y), sampling_rate=self._freq)
 
     #### METHODS FROM ORIGINAL VERSION ###################
 

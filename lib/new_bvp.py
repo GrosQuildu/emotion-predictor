@@ -3,6 +3,19 @@ import lib.heartbeat as hb
 
 
 class NewBVP:
+    labels = [
+        'bpm',
+        'pnn20',
+        'pnn50',
+        'hr_mad',
+        'rmssd',
+        'sdsd',
+        'sdnn',
+        'lf',
+        'hf',
+        'lf/hf'
+    ]
+
     def __init__(self, x, y, freq):
         self._x = x
         if isinstance(y, list):
@@ -10,22 +23,23 @@ class NewBVP:
         else:
             self._y = y
         self._freq = freq
+        self.measures = hb.process(self._y, self._freq, calc_freq=True)
 
-    def convert_to_bpm(self, show_plot=False, show_output_plot=False):
-        measures = hb.process(self._y, self._freq, calc_freq=False)
-        # print(measures)
-        # return measures['bpm'], measures['hr_mad'] # 0.21
-        # return measures['bpm'], measures['pnn50'] # 0.26
-        # return measures['bpm'], measures['pnn20'] # 0.27
-        # return measures['bpm'], measures['rmssd'] # 0.22
-        # return measures['bpm'], measures['sdsd'] # 0.23
-        # return measures['bpm'], measures['sdnn'] # 0.24
-        # return measures['bpm'], measures['lf'] # 0.24
-        # return measures['bpm'], measures['hf'] # 0.24
-        # return measures['bpm'], measures['lf/hf'] # 0.23
+    def get_features(self, extract_all_features=False):
+        if extract_all_features:
+            return self.get_all_features()
+        return self.get_best_features()
+
+    def get_best_features(self):
         return {
-            'bpm': measures['bpm'],
-            'pnn20': measures['pnn20'],
-            'pnn50': measures['pnn50']
+            'bpm': self.measures['bpm'],
+            'pnn20': self.measures['pnn20'],
+            'pnn50': self.measures['pnn50'],
         }
 
+    def get_all_features(self):
+        result = {}
+        for label in self.labels:
+            result[label] = self.measures[label]
+
+        return result
