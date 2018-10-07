@@ -33,6 +33,8 @@ class NewGSR:
         else:
             self.data = self.read_from_file(name)
 
+    ################### NEUROKIT CACHE METHODS #####################
+
     def save_to_file(self, filename, data):
         with open(filename, 'wb') as fp:
             pickle.dump(data, fp)
@@ -41,7 +43,7 @@ class NewGSR:
         with open(filename, 'rb') as fp:
             return pickle.load(fp)
 
-    #### METHODS ADDED IN EXPERIMENTAL VERSION ###########
+    ################################################################
 
     def get_features(self, extract_all_features=False):
         if extract_all_features:
