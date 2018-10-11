@@ -11,15 +11,34 @@ class ReverseSBS:
         self.test_size = test_size
         self.random_state = random_state
 
-    def fit(self, x, y):
+    def calculate(self, x, y):
+        number_of_features = len(x[0])
+
+        results = []
+        for i in range(number_of_features):
+            keys, accuracy = self._fit(x, y, starting_feature=i)
+            results.append((keys, accuracy))
+
+        max_accuracy = -1
+        max_accuracy_keys = None
+        for i in results:
+            if i[1] > max_accuracy:
+                max_accuracy = i[1]
+                max_accuracy_keys = i[0]
+
+        print(max_accuracy_keys)
+        print(max_accuracy)
+        sys.exit(0)
+        return max_accuracy_keys, max_accuracy
+
+    def _fit(self, x, y, starting_feature=0):
         max_features = len(x[0]) #number of all features
-        remaining_features = [i for i in range(1, max_features)] #indices of remaining features (without 0=bpm)
-        x_best = [[i] for i in x[:, 0]] #initial best feature configuration
-        result_features_keys = [0] #keys of best features
+        remaining_features = [i for i in range(0, max_features)] #indices of remaining features (without 0=bpm)
+        remaining_features.remove(starting_feature) #in order not to include the same feature twice
+        x_best = [[i] for i in x[:, starting_feature]] #initial best feature configuration
+        result_features_keys = [starting_feature] #keys of best features
         accuracy_best = self._test_accuracy(x_best, y)
-        # print(x_best)
-        # print(accuracy_best)
-        # sys.exit(0)
+
         while remaining_features:
             accuracy_results = {}
             for i in remaining_features:
@@ -32,15 +51,11 @@ class ReverseSBS:
             if max_value < accuracy_best:
                 break
 
-            print(f"Adding {max_index}")
             x_best = self._add_lists(x_best, x[:, max_index])
             remaining_features.remove(max_index)
             result_features_keys.append(max_index)
             accuracy_best = max_value
 
-        print(result_features_keys)
-        print(accuracy_best)
-        sys.exit(0)
         return result_features_keys, accuracy_best
 
     def _test_accuracy(self, x, y):

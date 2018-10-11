@@ -4,16 +4,16 @@ import lib.signals.heartbeat as hb
 
 class NewBVP:
     labels = [
-        'bpm',
-        'pnn20',
-        'pnn50',
-        'hr_mad',
-        'rmssd',
-        'sdsd',
-        'sdnn',
-        'lf',
-        'hf',
-        'lf/hf'
+        'bpm', #0
+        'pnn20', #1
+        'pnn50', #2
+        'hr_mad', #3
+        'rmssd', #4
+        'sdsd', #5
+        'sdnn', #6
+        'lf', #7
+        'hf', #8
+        'lf/hf' #9
     ]
 
     def __init__(self, x, y, freq):

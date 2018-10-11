@@ -39,7 +39,7 @@ class AI:
 
     def reverse_sbs_score(self, x, y):
         rev_sbs = ReverseSBS(SVC)
-        return rev_sbs.fit(x, y)
+        return rev_sbs.calculate(x, y)
 
     def random_forest_score(self, x, y, labels):
         forest = RandomForestClassifier(n_estimators=10000, random_state=0, n_jobs=-1)

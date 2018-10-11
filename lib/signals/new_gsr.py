@@ -58,18 +58,18 @@ class NewGSR:
 
     def get_all_features(self):
         return {
-            'avg_gsr': self.avg(),
-            'tonic_avg': self.tonic_avg(),
-            'phasic_avg': self.phasic_avg(),
-            'peak_count': self.peak_count(),
-            'amplitude_avg': self.amplitude_avg(),
-            'max_amplitude': self.max_aplitude(),
-            'derivative_avg': self.derivative_avg(),
-            'decrease_rate_avg': self.decrease_rate_avg(),
-            'derivative_negative_to_all': self.derivative_negative_to_all(),
-            'local_minima_count': self.local_minima_count(),
-            'local_maxima_count': self.local_maxima_count(),
-            'rising_time': self.rising_time()
+            'avg_gsr': self.avg(), #10
+            'tonic_avg': self.tonic_avg(), #11
+            'phasic_avg': self.phasic_avg(), #12
+            'peak_count': self.peak_count(), #13
+            'amplitude_avg': self.amplitude_avg(), #14
+            'max_amplitude': self.max_aplitude(), #15
+            'derivative_avg': self.derivative_avg(), #16
+            'decrease_rate_avg': self.decrease_rate_avg(), #17
+            'derivative_negative_to_all': self.derivative_negative_to_all(), #18
+            'local_minima_count': self.local_minima_count(), #19
+            'local_maxima_count': self.local_maxima_count(), #20
+            'rising_time': self.rising_time() #21
         }
 
     def avg(self):

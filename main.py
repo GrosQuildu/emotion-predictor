@@ -8,6 +8,8 @@ from os import listdir
 from os.path import isfile, join
 import matplotlib.pyplot as plt
 
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 DATA_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_preprocessed_python'
 ORIGINALS_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_original_bdf'
