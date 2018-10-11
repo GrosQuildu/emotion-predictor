@@ -20,7 +20,8 @@ class Postprocessing:
 
         for person in people:
             for image in person:
-                if not image['heart'] or not image['gsr']:
+                # if not image['heart'] or not image['gsr']:
+                if not image['heart'] and not image['gsr']:
                     continue
                 emotion = em.get_class_for_values(image['valence'], image['arousal'])
 

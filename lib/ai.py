@@ -1,11 +1,11 @@
-import importlib
 import numpy as np
 from sklearn import model_selection
 from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-from lib.sbs import SBS
+from lib.accuracy.sbs import SBS
+from lib.accuracy.reverse_sbs import ReverseSBS
 
 
 VALIDATION_SIZE = 0.2
@@ -36,6 +36,10 @@ class AI:
         knn = KNeighborsClassifier(n_neighbors=2)
         sbs = SBS(knn, k_features=1)
         return sbs.fit(x, y)
+
+    def reverse_sbs_score(self, x, y):
+        rev_sbs = ReverseSBS(SVC)
+        return rev_sbs.fit(x, y)
 
     def random_forest_score(self, x, y, labels):
         forest = RandomForestClassifier(n_estimators=10000, random_state=0, n_jobs=-1)

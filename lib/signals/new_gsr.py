@@ -51,9 +51,10 @@ class NewGSR:
         return self.get_best_features()
 
     def get_best_features(self):
-        return {
-            'avg_gsr': self.avg()
-        }
+        return {}
+        # return {
+        #     'avg_gsr': self.avg()
+        # }
 
     def get_all_features(self):
         return {

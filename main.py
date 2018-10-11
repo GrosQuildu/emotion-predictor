@@ -13,7 +13,7 @@ DATA_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological
 ORIGINALS_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_original_bdf'
 DATA_FREQUENCY = 128
 OUT_FILE = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\processed.dat'
-NEED_PREPROCESSING = True
+NEED_PREPROCESSING = False
 EXTRACT_ALL_FEATURES = True
 
 
@@ -23,7 +23,7 @@ class Main:
         #     self._show_menu()
         #     option = input()
         #     self._handle_input(option)
-        self._handle_input("3")
+        self._handle_input("4")
 
     def _handle_input(self, input):
         if input == "0":
@@ -35,9 +35,13 @@ class Main:
             self._sbs_scores()
         elif input == "3":
             self._random_forest_scores()
+        elif input == "4":
+            self._reverse_sbs_scores()
 
     def _train_model(self):
         x, y = self._get_data_tuples()
+        x = [[i] for i in x[:, 0]]
+        # print(y)
         ai = AI()
         ai.load_data(x, y)
 
@@ -63,6 +67,20 @@ class Main:
         k5 = list(sbs.subsets_[8])
         print(k5)
 
+    def _reverse_sbs_scores(self):
+        print("Looking for best features...")
+        main.EXTRACT_ALL_FEATURES = True
+        x, y = self._get_data_tuples()
+        ai = AI()
+        features, accuracy = ai.reverse_sbs_score(x, y)
+
+        labels = Preprocessing.get_labels()
+        print(f"Max accuracy is {accuracy}")
+        print("Features:")
+
+        for f in features:
+            print(labels[f])
+
     def _random_forest_scores(self):
         print("Looking for best features...")
         main.EXTRACT_ALL_FEATURES = True
@@ -87,6 +105,8 @@ class Main:
         print("Choose an option:")
         print("1 - Train model")
         print("2 - SBS")
+        print("3 - Random Forest scores")
+        print("4 - Reverse SBS scores")
         print("0 - exit")
 
     def _process_people(self, directory):

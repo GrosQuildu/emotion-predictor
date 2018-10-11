@@ -1,5 +1,11 @@
 
 def get_class_for_values(valence, arousal):
+    # return _get_class_by_both()
+    # return get_class_by_valence(valence)
+    return get_class_by_arousal(arousal)
+
+
+def _get_class_by_both(valence, arousal):
     if valence < 4:
         if arousal < 4:
             return "vL_aL"
@@ -18,3 +24,23 @@ def get_class_for_values(valence, arousal):
         if 4 <= arousal < 6.5:
             return "vH_aM"
         return "vH_aH"
+
+
+def get_class_by_valence(valence):
+    if valence < 4:
+        return "vL"
+
+    if 4 <= valence < 6.5:
+        return "vM"
+
+    return "vH"
+
+
+def get_class_by_arousal(arousal):
+    if arousal < 4:
+        return "aL"
+
+    if 4 <= arousal < 6.5:
+        return "aM"
+
+    return "aH"

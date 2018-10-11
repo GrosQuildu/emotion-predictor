@@ -1,5 +1,5 @@
 import numpy as np
-import lib.heartbeat as hb
+import lib.signals.heartbeat as hb
 
 
 class NewBVP:
@@ -31,10 +31,13 @@ class NewBVP:
         return self.get_best_features()
 
     def get_best_features(self):
+        # return {
+        #     'bpm': self.measures['bpm'],
+        #     'pnn20': self.measures['pnn20'],
+        #     'pnn50': self.measures['pnn50'],
+        # }
         return {
-            'bpm': self.measures['bpm'],
-            'pnn20': self.measures['pnn20'],
-            'pnn50': self.measures['pnn50'],
+            'bpm': self.measures['bpm']
         }
 
     def get_all_features(self):

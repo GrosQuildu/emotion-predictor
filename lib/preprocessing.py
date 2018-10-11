@@ -1,7 +1,7 @@
 import numpy
 import matplotlib.pyplot as plt
-from lib.new_bvp import NewBVP
-from lib.new_gsr import NewGSR
+from lib.signals.new_bvp import NewBVP
+from lib.signals.new_gsr import NewGSR
 from lib.originals import Originals
 import sys
 

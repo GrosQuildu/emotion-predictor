@@ -10,7 +10,6 @@ This should be done after gathering all features from both BVP and GSR
 usage:
 knn = KNeighborsClassifier(n_neighbors=2)
 sbs = SBS(knn, k_features=1)
-sbs = SBS(knn, k_features=1)
 sbs.fit(X_train_std, y_train)
 """
 
@@ -25,7 +24,6 @@ class SBS:
         self.random_state = random_state
 
     def fit(self, x, y):
-
         x_train, x_test, y_train, y_test = \
             train_test_split(x, y, test_size=self.test_size,
                              random_state=self.random_state)
