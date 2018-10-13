@@ -2,6 +2,7 @@ import operator
 import sys
 from sklearn import model_selection
 from sklearn.metrics import accuracy_score
+from pandas import DataFrame
 
 
 class ReverseSBS:
@@ -26,9 +27,6 @@ class ReverseSBS:
                 max_accuracy = i[1]
                 max_accuracy_keys = i[0]
 
-        print(max_accuracy_keys)
-        print(max_accuracy)
-        sys.exit(0)
         return max_accuracy_keys, max_accuracy
 
     def _fit(self, x, y, starting_feature=0):
@@ -43,6 +41,8 @@ class ReverseSBS:
             accuracy_results = {}
             for i in remaining_features:
                 x_test = self._add_lists(x_best, x[:, i])
+                # x_test, y_test = self._drop_incorrect(x_test, y)
+
                 accuracy = self._test_accuracy(x_test, y)
                 accuracy_results[i] = accuracy
 
@@ -96,3 +96,11 @@ class ReverseSBS:
                 max_index = index
 
         return max_index, max_value
+
+    def _drop_incorrect(self, x, y):
+        merged = self._add_lists(x, y)
+        filtered = DataFrame.from_records(merged).dropna()
+        all = len(filtered[0])
+        y = filtered[:, (all-1)]
+        x = filtered[:, [i for i in range(all-1)]]
+        return x, y

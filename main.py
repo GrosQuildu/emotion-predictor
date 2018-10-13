@@ -10,12 +10,13 @@ import matplotlib.pyplot as plt
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=UserWarning)
 
 DATA_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_preprocessed_python'
 ORIGINALS_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_original_bdf'
 DATA_FREQUENCY = 128
 OUT_FILE = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\processed.dat'
-NEED_PREPROCESSING = False
+NEED_PREPROCESSING = True
 EXTRACT_ALL_FEATURES = True
 
 

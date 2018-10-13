@@ -35,12 +35,6 @@ class Preprocessing:
         for i in range(len(data['data'])):
             try:
                 heart = self._run_bvp(data['data'][i])
-                if heart['bpm'] == 0.0:
-                    print("Fatal error")
-                    print(file)
-                    print(i)
-                    sys.exit(0)
-                # timestamps = [el[0] for el in bpm]
                 gsr = self._run_gsr(data['data'][i], "video_{}_{}".format(file_number, i))
 
                 video_result = {
@@ -58,17 +52,18 @@ class Preprocessing:
         return person_result
 
     def _run_bvp(self, data):
-        num = len(data[CHANNELS['bvp']])
+        bvp_signal = self._trim_signal(data[CHANNELS['bvp']], self._data_frequency, start=0, stop=40)
         bvp = NewBVP(
-            list(range(0, num)),
-            data[CHANNELS['bvp']],
+            None,
+            bvp_signal,
             self._data_frequency
         )
         return bvp.get_features(extract_all_features=self._extract_all_features)
 
     def _run_gsr(self, data, filename):
+        gsr_signal = self._trim_signal(data[CHANNELS['gsr']], self._data_frequency, start=18, stop=55)
         gsr = NewGSR(
-            data[CHANNELS['gsr']],
+            gsr_signal,
             self._data_frequency,
             filename=filename,
             file=False
@@ -155,6 +150,15 @@ class Preprocessing:
     def _get_avg_gsr(self, gsr, filename):
         gsr = NewGSR(gsr, 512, filename=filename, file=False)
         return gsr.get_features(extract_all_features=self._extract_all_features)
+
+    def _trim_signal(self, signal, frequency, start=0, stop=0):
+        if not start and not stop:
+            return signal
+
+        start *= frequency
+        stop *= frequency
+
+        return signal[start:stop]
 
     @staticmethod
     def get_labels():

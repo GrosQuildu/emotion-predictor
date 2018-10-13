@@ -8,18 +8,18 @@ from statistics import mean, StatisticsError
 
 class NewGSR:
     labels = [
-        'avg_gsr',
-        'tonic_avg',
-        'phasic_avg',
-        'peak_count',
-        'amplitude_avg',
-        'max_amplitude',
-        'derivative_avg',
-        'decrease_rate_avg',
-        'derivative_negative_to_all',
-        'local_minima_count',
-        'local_maxima_count',
-        'rising_time'
+        'avg_gsr', #10
+        'tonic_avg', #11
+        'phasic_avg', #12
+        'peak_count', #13
+        'amplitude_avg', #14
+        'max_amplitude', #15
+        'derivative_avg', #16
+        'decrease_rate_avg', #17
+        'derivative_negative_to_all', #18
+        'local_minima_count', #19
+        'local_maxima_count', #20
+        'rising_time' #21
     ]
 
     def __init__(self, y, freq, file=False, filename=None):
@@ -51,10 +51,9 @@ class NewGSR:
         return self.get_best_features()
 
     def get_best_features(self):
-        return {}
-        # return {
-        #     'avg_gsr': self.avg()
-        # }
+        return {
+            'peak_count': self.peak_count()
+        }
 
     def get_all_features(self):
         return {

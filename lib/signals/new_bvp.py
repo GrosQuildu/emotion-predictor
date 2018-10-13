@@ -24,6 +24,8 @@ class NewBVP:
             self._y = y
         self._freq = freq
         self.measures = hb.process(self._y, self._freq, calc_freq=True)
+        if self.measures['bpm'] > 125 or self.measures['bpm'] < 50:
+            raise Exception("Malformed data")
 
     def get_features(self, extract_all_features=False):
         if extract_all_features:
