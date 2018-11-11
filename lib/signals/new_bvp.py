@@ -1,5 +1,7 @@
 import numpy as np
 import lib.signals.heartbeat as hb
+from biosppy.signals.bvp import bvp
+from collections import OrderedDict
 
 
 class NewBVP:
@@ -15,14 +17,25 @@ class NewBVP:
         'hf', #8
         'lf/hf' #9
     ]
+    # labels = [
+    #     'bpm',
+    #     'pnn20',
+    #     'pnn50',
+    #     'hr_mad',
+    #     'rmssd',
+    #     'lf/hf'
+    # ]
 
     def __init__(self, x, y, freq):
         self._x = x
-        if isinstance(y, list):
-            self._y = np.asarray(y)
+        biosppy_processed = bvp(y, freq, show=False)
+        y_filtered = biosppy_processed['filtered']
+        if isinstance( y_filtered, list):
+            self._y = np.asarray( y_filtered)
         else:
-            self._y = y
+            self._y = y_filtered
         self._freq = freq
+
         self.measures = hb.process(self._y, self._freq, calc_freq=True)
         if self.measures['bpm'] > 125 or self.measures['bpm'] < 50:
             raise Exception("Malformed data")
@@ -38,12 +51,12 @@ class NewBVP:
         #     'pnn20': self.measures['pnn20'],
         #     'pnn50': self.measures['pnn50'],
         # }
-        return {
-            'bpm': self.measures['bpm']
-        }
+        return OrderedDict([
+            # ('pnn50', self.measures['pnn50'])
+        ])
 
     def get_all_features(self):
-        result = {}
+        result = OrderedDict()
         for label in self.labels:
             result[label] = self.measures[label]
 

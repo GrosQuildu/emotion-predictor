@@ -13,10 +13,11 @@ CHANNELS = {
 
 
 class Preprocessing:
-    def __init__(self, data_frequency, extract_all_features=False):
+    def __init__(self, data_frequency, extract_all_features=False, need_preprocessing=False):
         self._data_frequency = data_frequency
         self._org = Originals()
         self._extract_all_features = extract_all_features
+        self._need_preprocessing = need_preprocessing
 
     def load_data_from_file(self, file_path):
         loaded = numpy.load(file_path, allow_pickle=True, encoding='bytes')
@@ -27,9 +28,14 @@ class Preprocessing:
         }
 
     def process_person(self, file, original_file, file_number):
-        base_bvp, base_gsr = self._org.get_person_resting_values(original_file, file_number)
-        heart_avg = self._get_avg_bpm(base_bvp)
-        gsr_avg = self._get_avg_gsr(base_gsr, "avg_{}".format(file_number))
+        try:
+            base_bvp, base_gsr = self._org.get_person_resting_values(original_file, file_number)
+            heart_avg = self._get_avg_bpm(base_bvp)
+            gsr_avg = self._get_avg_gsr(base_gsr, "avg_{}".format(file_number))
+        except Exception:
+            print(f"Malformed data when processing baseline of {file_number}")
+            raise
+
         data = self.load_data_from_file(file)
         person_result = []
         for i in range(len(data['data'])):
@@ -51,8 +57,9 @@ class Preprocessing:
         person_result = self._get_person_data_diff(person_result, heart_avg, gsr_avg)
         return person_result
 
+    # start=2, stop=9
     def _run_bvp(self, data):
-        bvp_signal = self._trim_signal(data[CHANNELS['bvp']], self._data_frequency, start=0, stop=40)
+        bvp_signal = self._trim_signal(data[CHANNELS['bvp']], self._data_frequency, start=2, stop=17)
         bvp = NewBVP(
             None,
             bvp_signal,
@@ -61,12 +68,12 @@ class Preprocessing:
         return bvp.get_features(extract_all_features=self._extract_all_features)
 
     def _run_gsr(self, data, filename):
-        gsr_signal = self._trim_signal(data[CHANNELS['gsr']], self._data_frequency, start=18, stop=55)
+        gsr_signal = self._trim_signal(data[CHANNELS['gsr']], self._data_frequency, start=2, stop=17)
         gsr = NewGSR(
             gsr_signal,
             self._data_frequency,
             filename=filename,
-            file=False
+            file=self._need_preprocessing
         )
         return gsr.get_features(extract_all_features=self._extract_all_features)
 
@@ -148,7 +155,7 @@ class Preprocessing:
         return bvp.get_features(extract_all_features=self._extract_all_features)
 
     def _get_avg_gsr(self, gsr, filename):
-        gsr = NewGSR(gsr, 512, filename=filename, file=False)
+        gsr = NewGSR(gsr, 512, filename=filename, file=self._need_preprocessing)
         return gsr.get_features(extract_all_features=self._extract_all_features)
 
     def _trim_signal(self, signal, frequency, start=0, stop=0):

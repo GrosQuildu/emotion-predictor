@@ -1,8 +1,8 @@
 
 def get_class_for_values(valence, arousal):
-    return _get_class_by_both(valence, arousal)
+    # return _get_class_by_both(valence, arousal)
     # return get_class_by_valence(valence)
-    # return get_class_by_arousal(arousal)
+    return get_class_by_arousal(arousal)
 
 
 def _get_class_by_both(valence, arousal):

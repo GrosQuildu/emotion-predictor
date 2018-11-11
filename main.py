@@ -4,6 +4,7 @@ import re
 from lib.preprocessing import Preprocessing
 from lib.postprocessing import Postprocessing
 from lib.ai import AI
+from lib.statistics import Statistics
 from os import listdir
 from os.path import isfile, join
 import matplotlib.pyplot as plt
@@ -16,7 +17,7 @@ DATA_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological
 ORIGINALS_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_original_bdf'
 DATA_FREQUENCY = 128
 OUT_FILE = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\processed.dat'
-NEED_PREPROCESSING = True
+NEED_PREPROCESSING = False
 EXTRACT_ALL_FEATURES = True
 
 
@@ -40,17 +41,17 @@ class Main:
             self._random_forest_scores()
         elif input == "4":
             self._reverse_sbs_scores()
+        elif input == "5":
+            self._analyse_predictions()
+        elif input == "6":
+            self._show_statistics()
 
     def _train_model(self):
+        print("Training model")
         x, y = self._get_data_tuples()
-        x = [[i] for i in x[:, 0]]
-        # print(y)
         ai = AI()
         ai.load_data(x, y)
 
-        # print(x)
-        # ai = AI()
-        # ai.load_data(x, y)
         ai.test()
 
     def _sbs_scores(self):
@@ -74,6 +75,7 @@ class Main:
         print("Looking for best features...")
         main.EXTRACT_ALL_FEATURES = True
         x, y = self._get_data_tuples()
+        print(len(y))
         ai = AI()
         features, accuracy = ai.reverse_sbs_score(x, y)
 
@@ -86,10 +88,19 @@ class Main:
 
     def _random_forest_scores(self):
         print("Looking for best features...")
-        main.EXTRACT_ALL_FEATURES = True
+        main.EXTRACT_ALL_FEATURES = False
         x, y = self._get_data_tuples()
         ai = AI()
         ai.random_forest_score(x, y, Preprocessing.get_labels())
+
+    def _analyse_predictions(self):
+        print("Analysing predictions")
+        x, y = self._get_data_tuples()
+        ai = AI()
+        ai.load_data(x, y)
+        main, detail = ai.split_predictions()
+        print(f"Main accuracy = {main}")
+        print(detail)
 
     def _get_data_tuples(self):
         if NEED_PREPROCESSING:
@@ -104,6 +115,15 @@ class Main:
 
         return x_scaled, y
 
+    def _show_statistics(self):
+        print("Creating statistics...")
+        main.EXTRACT_ALL_FEATURES = True
+        x, y = self._get_data_tuples()
+        labels = Preprocessing.get_labels()
+        # print(y)
+        stats = Statistics(x, y, labels)
+        stats.create()
+
     def _show_menu(self):
         print("Choose an option:")
         print("1 - Train model")
@@ -114,22 +134,25 @@ class Main:
 
     def _process_people(self, directory):
         files = [f for f in listdir(directory) if isfile(join(directory, f))]
-        preproc = Preprocessing(DATA_FREQUENCY, extract_all_features=EXTRACT_ALL_FEATURES)
+        preproc = Preprocessing(DATA_FREQUENCY, extract_all_features=EXTRACT_ALL_FEATURES, need_preprocessing=NEED_PREPROCESSING)
         people = []
 
         print("Starting preprocessing")
         for file in files:
-            if file == "s13.dat":
+            if file == "s23.dat":
                 break
 
-            number = self._get_file_number(file)
-            person = preproc.process_person(
-                f"{DATA_PATH}/{file}",
-                f"{ORIGINALS_PATH}/s{number}.bdf",
-                number
-            )
-            people.append(person)
-            print(f"{file} done. Got data from {len(person)} videos.")
+            try:
+                number = self._get_file_number(file)
+                person = preproc.process_person(
+                    f"{DATA_PATH}/{file}",
+                    f"{ORIGINALS_PATH}/s{number}.bdf",
+                    number
+                )
+                people.append(person)
+                print(f"{file} done. Got data from {len(person)} videos.")
+            except Exception:
+                pass
 
         print("Preprocessing finished")
         return people

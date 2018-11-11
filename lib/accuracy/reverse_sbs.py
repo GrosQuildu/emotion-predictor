@@ -3,11 +3,13 @@ import sys
 from sklearn import model_selection
 from sklearn.metrics import accuracy_score
 from pandas import DataFrame
+from collections import OrderedDict
 
 
 class ReverseSBS:
-    def __init__(self, estimator, scoring=accuracy_score, test_size=0.20, random_state=1):
+    def __init__(self, estimator, estimator_args, scoring=accuracy_score, test_size=0.2, random_state=1):
         self.estimator = estimator
+        self.estimator_args = estimator_args
         self.scoring = scoring
         self.test_size = test_size
         self.random_state = random_state
@@ -27,18 +29,21 @@ class ReverseSBS:
                 max_accuracy = i[1]
                 max_accuracy_keys = i[0]
 
+        # if max_accuracy > 0.7:
+        #     print(self.estimator_obj.estimators_)
         return max_accuracy_keys, max_accuracy
 
     def _fit(self, x, y, starting_feature=0):
         max_features = len(x[0]) #number of all features
-        remaining_features = [i for i in range(0, max_features)] #indices of remaining features (without 0=bpm)
+        remaining_features = [i for i in range(0, max_features)] #indices of remaining features (without starting feature)
         remaining_features.remove(starting_feature) #in order not to include the same feature twice
         x_best = [[i] for i in x[:, starting_feature]] #initial best feature configuration
         result_features_keys = [starting_feature] #keys of best features
         accuracy_best = self._test_accuracy(x_best, y)
 
         while remaining_features:
-            accuracy_results = {}
+            # accuracy_results = {}
+            accuracy_results = OrderedDict()
             for i in remaining_features:
                 x_test = self._add_lists(x_best, x[:, i])
                 # x_test, y_test = self._drop_incorrect(x_test, y)
@@ -60,9 +65,11 @@ class ReverseSBS:
 
     def _test_accuracy(self, x, y):
         x_train, x_validate, y_train, y_validate = self._split_data(x, y)
-        model = self.estimator()
+        model = self.estimator(**self.estimator_args)
+        # model = self.estimator()
         model.fit(x_train, y_train)
         predictions = model.predict(x_validate)
+        self.estimator_obj = model
 
         return accuracy_score(y_validate, predictions)
 
