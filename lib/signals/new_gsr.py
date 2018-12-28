@@ -23,13 +23,17 @@ class NewGSR:
         'rising_time' #21
     ]
 
-    def __init__(self, y, freq, file=False, filename=None):
-        self._y = y
+    def __init__(self, signal, freq, file=False, filename=None, plot=False):
+        self._y = signal
         self._freq = freq
-        self._derivative = self._get_derivative(y)
+        self._derivative = self._get_derivative(signal)
         name = "neurokit/{}.dat".format(filename)
         if file:
-            self.data = nk.eda_process(y, sampling_rate=freq)
+            self.data = nk.eda_process(signal, sampling_rate=freq)
+            if plot:
+                nk.plot_events_in_signal(nk.z_score(self.data["df"]), self.data["EDA"]["SCR_Peaks_Indexes"])
+                print(self.data["EDA"]["SCR_Peaks_Indexes"])
+                plt.show()
             self.save_to_file(name, self.data)
         else:
             self.data = self.read_from_file(name)
@@ -53,8 +57,8 @@ class NewGSR:
 
     def get_best_features(self):
         return OrderedDict([
-            ('derivative_negative_to_all', self.derivative_negative_to_all()),
-            ('max_amplitude', self.max_aplitude())
+            ('decrease_rate_avg', self.decrease_rate_avg()),
+            ('avg_gsr', self.avg())
         ])
 
     def get_all_features(self):

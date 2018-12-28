@@ -7,18 +7,12 @@ from lib.ai import AI
 from lib.statistics import Statistics
 from os import listdir
 from os.path import isfile, join
+from config import DATA_FREQUENCY, NEED_PREPROCESSING, DATA_PATH, ORIGINALS_PATH, OUT_FILE
 import matplotlib.pyplot as plt
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
-
-DATA_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_preprocessed_python'
-ORIGINALS_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_original_bdf'
-DATA_FREQUENCY = 128
-OUT_FILE = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\processed.dat'
-NEED_PREPROCESSING = False
-EXTRACT_ALL_FEATURES = True
 
 
 class Main:
@@ -134,13 +128,14 @@ class Main:
 
     def _process_people(self, directory):
         files = [f for f in listdir(directory) if isfile(join(directory, f))]
-        preproc = Preprocessing(DATA_FREQUENCY, extract_all_features=EXTRACT_ALL_FEATURES, need_preprocessing=NEED_PREPROCESSING)
+        preproc = Preprocessing(DATA_FREQUENCY)
         people = []
+        num_samples = 0
 
         print("Starting preprocessing")
         for file in files:
-            if file == "s23.dat":
-                break
+            # if file == "s23.dat":
+            #     break
 
             try:
                 number = self._get_file_number(file)
@@ -150,8 +145,11 @@ class Main:
                     number
                 )
                 people.append(person)
-                print(f"{file} done. Got data from {len(person)} videos.")
+                person_sample_count = len(person)
+                print(f"{file} done. Got data from {person_sample_count} videos.")
+                num_samples += person_sample_count
             except Exception:
+                # raise
                 pass
 
         print("Preprocessing finished")

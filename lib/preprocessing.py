@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from lib.signals.new_bvp import NewBVP
 from lib.signals.new_gsr import NewGSR
 from lib.originals import Originals
-import sys
+from config import EXTRACT_ALL_FEATURES, NEED_PREPROCESSING, SIGNAL_BEGIN, SIGNAL_END
 
 
 CHANNELS = {
@@ -13,11 +13,9 @@ CHANNELS = {
 
 
 class Preprocessing:
-    def __init__(self, data_frequency, extract_all_features=False, need_preprocessing=False):
+    def __init__(self, data_frequency):
         self._data_frequency = data_frequency
         self._org = Originals()
-        self._extract_all_features = extract_all_features
-        self._need_preprocessing = need_preprocessing
 
     def load_data_from_file(self, file_path):
         loaded = numpy.load(file_path, allow_pickle=True, encoding='bytes')
@@ -29,9 +27,10 @@ class Preprocessing:
 
     def process_person(self, file, original_file, file_number):
         try:
+            # BVP comes downsampled while GSR comes with original frequency (512 Hz)
             base_bvp, base_gsr = self._org.get_person_resting_values(original_file, file_number)
-            heart_avg = self._get_avg_bpm(base_bvp)
-            gsr_avg = self._get_avg_gsr(base_gsr, "avg_{}".format(file_number))
+            heart_avg = self._get_base_bvp_features(base_bvp)
+            gsr_avg = self._get_base_gsr_features(base_gsr, "avg_{}".format(file_number))
         except Exception:
             print(f"Malformed data when processing baseline of {file_number}")
             raise
@@ -40,8 +39,8 @@ class Preprocessing:
         person_result = []
         for i in range(len(data['data'])):
             try:
-                heart = self._run_bvp(data['data'][i])
-                gsr = self._run_gsr(data['data'][i], "video_{}_{}".format(file_number, i))
+                heart = self._get_bvp_features(data['data'][i], start=SIGNAL_BEGIN, stop=SIGNAL_END)
+                gsr = self._get_gsr_features(data['data'][i], "video_{}_{}".format(file_number, i), start=SIGNAL_BEGIN, stop=SIGNAL_END)
 
                 video_result = {
                     'heart': heart,
@@ -54,30 +53,41 @@ class Preprocessing:
                 print(f"Malformed data when processing video {i}")
                 continue
 
-        person_result = self._get_person_data_diff(person_result, heart_avg, gsr_avg)
+        person_result = self._convert_features_to_diffs(person_result, heart_avg, gsr_avg)
         return person_result
 
-    # start=2, stop=9
-    def _run_bvp(self, data):
-        bvp_signal = self._trim_signal(data[CHANNELS['bvp']], self._data_frequency, start=2, stop=17)
+    def _get_bvp_features(self, data, start=0, stop=0):
+        bvp_signal = self._trim_signal(data[CHANNELS['bvp']], self._data_frequency, start=start, stop=stop)
         bvp = NewBVP(
-            None,
             bvp_signal,
-            self._data_frequency
+            self._data_frequency,
+            show_plot=False
         )
-        return bvp.get_features(extract_all_features=self._extract_all_features)
+        return bvp.get_features(extract_all_features=EXTRACT_ALL_FEATURES)
 
-    def _run_gsr(self, data, filename):
-        gsr_signal = self._trim_signal(data[CHANNELS['gsr']], self._data_frequency, start=2, stop=17)
+    def _get_gsr_features(self, data, filename, start=0, stop=0):
+        gsr_signal = self._trim_signal(data[CHANNELS['gsr']], self._data_frequency, start=start, stop=stop)
         gsr = NewGSR(
             gsr_signal,
             self._data_frequency,
             filename=filename,
-            file=self._need_preprocessing
+            file=NEED_PREPROCESSING,
+            plot=False
         )
-        return gsr.get_features(extract_all_features=self._extract_all_features)
+        return gsr.get_features(extract_all_features=EXTRACT_ALL_FEATURES)
 
-    def _get_person_data_diff(self, person_data, heart_avg, gsr_avg):
+    def _get_base_bvp_features(self, bvp):
+        bvp = NewBVP(
+            bvp,
+            self._data_frequency
+        )
+        return bvp.get_features(extract_all_features=EXTRACT_ALL_FEATURES)
+
+    def _get_base_gsr_features(self, gsr, filename):
+        gsr = NewGSR(gsr, 512, filename=filename, file=NEED_PREPROCESSING)
+        return gsr.get_features(extract_all_features=EXTRACT_ALL_FEATURES)
+
+    def _convert_features_to_diffs(self, person_data, heart_avg, gsr_avg):
         for i in person_data:
             for key in i['heart']:
                 i['heart'][key] = heart_avg[key] - i['heart'][key]
@@ -93,6 +103,17 @@ class Preprocessing:
             results.append((bpm[i][1], gsr[i][1], label[0], label[1]))
 
         return results
+
+    def _trim_signal(self, signal, frequency, start=0, stop=0):
+        if not start and not stop:
+            return signal
+
+        start *= frequency
+        stop *= frequency
+
+        return signal[start:stop]
+
+    ############ LEGACY METHODS ############
 
     def _show_bpm_plot(self, data, video_id):
         x = [i[0] / self._data_frequency for i in data[video_id]['bpm']]
@@ -145,27 +166,6 @@ class Preprocessing:
     def _get_percentage_diff(self, value, avg):
         diff = value - avg
         return (diff/avg)*100
-
-    def _get_avg_bpm(self, bvp):
-        bvp = NewBVP(
-            list(range(len(bvp))),
-            bvp,
-            self._data_frequency
-        )
-        return bvp.get_features(extract_all_features=self._extract_all_features)
-
-    def _get_avg_gsr(self, gsr, filename):
-        gsr = NewGSR(gsr, 512, filename=filename, file=self._need_preprocessing)
-        return gsr.get_features(extract_all_features=self._extract_all_features)
-
-    def _trim_signal(self, signal, frequency, start=0, stop=0):
-        if not start and not stop:
-            return signal
-
-        start *= frequency
-        stop *= frequency
-
-        return signal[start:stop]
 
     @staticmethod
     def get_labels():

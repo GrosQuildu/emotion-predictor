@@ -12,10 +12,7 @@ from sklearn.svm import SVC
 from lib.accuracy.sbs import SBS
 from lib.accuracy.reverse_sbs import ReverseSBS
 from lib.prediction_analyser import PredictionAnalyser
-
-
-VALIDATION_SIZE = 0.2
-SEED = 1
+from config import VALIDATION_SIZE, SEED
 
 
 class AI:
@@ -27,8 +24,8 @@ class AI:
         self._y_val = y_val
 
     def test(self):
-        #model = RandomForestClassifier(max_depth=8, n_estimators=100, max_features='auto', min_samples_split=3)
-        model = LogisticRegression(multi_class='multinomial', solver='lbfgs', C=1.05)
+        model = RandomForestClassifier()
+        # model = LogisticRegression(multi_class='multinomial', solver='lbfgs', C=1.05)
         # model = SVC()
         #model = MLPClassifier()
 
@@ -58,7 +55,7 @@ class AI:
 
     def reverse_sbs_score(self, x, y):
         # rev_sbs = ReverseSBS(LogisticRegression)
-        rev_sbs = ReverseSBS(MLPClassifier, {})
+        rev_sbs = ReverseSBS(RandomForestClassifier, {})
         return rev_sbs.calculate(x, y)
 
     def random_forest_score(self, x, y, labels):

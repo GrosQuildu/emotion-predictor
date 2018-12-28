@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from statistics import mean
+from statistics import stdev
 
 
 class Statistics:
@@ -38,7 +39,10 @@ class Statistics:
     def _mean_physical_values(self, values):
         for emotion in values:
             for signal in values[emotion]:
-                values[emotion][signal] = mean(values[emotion][signal])
+                tmp = values[emotion][signal]
+                values[emotion][signal] = {}
+                values[emotion][signal]['mean'] = mean(tmp)
+                values[emotion][signal]['stdev'] = stdev(tmp)
 
         return values
 
@@ -47,11 +51,13 @@ class Statistics:
 
         signals = values[labels[0]].keys()
         for signal in signals:
+            my_labels = list(labels)
             graph_data = []
-            for emotion in values:
-                graph_data.append(values[emotion][signal])
+            for i, emotion in enumerate(values):
+                graph_data.append(values[emotion][signal]['mean'])
+                my_labels[i] = my_labels[i] + " (" + str(round(values[emotion][signal]['stdev'], 2)) + ")"
 
-            self._show_graph(signal, graph_data, labels)
+            self._show_graph(signal, graph_data, my_labels)
 
     def _show_graph(self, title, data, labels):
         y_pos = np.arange(len(data))

@@ -1,11 +1,6 @@
-import numpy as np
 import pyedflib as bdf
-import sys
 import matplotlib.pyplot as plt
-import datetime
-import struct
-
-ORIGINALS_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_original_bdf'
+from config import ORIGINALS_PATH
 
 GSR = 40
 BVP = 45
@@ -21,7 +16,6 @@ class Originals:
         begin, end = self._get_resting_markers(reader.readSignal(STATUS))
 
         rest_bvp = self._get_resting_data(bvp_signal, begin, end)
-        # rest_gsr = self._get_resting_data(gsr_signal, begin, end)
         rest_gsr = gsr_signal[begin:end]
         if int(number) < 23:
             rest_gsr = self._convert_gsr_values(rest_gsr)
@@ -145,4 +139,3 @@ class Originals:
         )
         plt.grid()
         plt.show()
-

@@ -2,6 +2,7 @@ import operator
 import sys
 from sklearn import model_selection
 from sklearn.metrics import accuracy_score
+from sklearn.ensemble import AdaBoostClassifier
 from pandas import DataFrame
 from collections import OrderedDict
 
@@ -66,10 +67,8 @@ class ReverseSBS:
     def _test_accuracy(self, x, y):
         x_train, x_validate, y_train, y_validate = self._split_data(x, y)
         model = self.estimator(**self.estimator_args)
-        # model = self.estimator()
         model.fit(x_train, y_train)
         predictions = model.predict(x_validate)
-        self.estimator_obj = model
 
         return accuracy_score(y_validate, predictions)
 
