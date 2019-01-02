@@ -21,7 +21,7 @@ class NewBVP:
     def __init__(self, signal, freq, show_plot=False):
         self.plot = show_plot
         self.measures = self._process_signal(signal, freq)
-        if self.measures['bpm'] > 120 or self.measures['bpm'] < 50:
+        if self.measures['bpm'] > 125 or self.measures['bpm'] < 50:
             raise Exception(f"Malformed data: BPM={self.measures['bpm']}")
 
     def get_features(self, extract_all_features=False):
@@ -30,14 +30,9 @@ class NewBVP:
         return self.get_best_features()
 
     def get_best_features(self):
-        # return {
-        #     'bpm': self.measures['bpm'],
-        #     'pnn20': self.measures['pnn20'],
-        #     'pnn50': self.measures['pnn50'],
-        # }
         return OrderedDict([
-            ('hf', self.measures['hf']),
-            ('bpm', self.measures['bpm'])
+            ('bpm', self.measures['bpm']),
+            ('pnn20', self.measures['pnn20'])
         ])
 
     def get_all_features(self):

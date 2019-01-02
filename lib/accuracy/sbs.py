@@ -22,6 +22,8 @@ class SBS:
         self.k_features = k_features
         self.test_size = test_size
         self.random_state = random_state
+        self.subsets_ = None
+        self.scores_ = None
 
     def fit(self, x, y):
         x_train, x_test, y_train, y_test = \

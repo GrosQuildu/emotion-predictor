@@ -55,11 +55,11 @@ class AI:
 
     def reverse_sbs_score(self, x, y):
         # rev_sbs = ReverseSBS(LogisticRegression)
-        rev_sbs = ReverseSBS(RandomForestClassifier, {})
+        rev_sbs = ReverseSBS(SVC, {})
         return rev_sbs.calculate(x, y)
 
     def random_forest_score(self, x, y, labels):
-        forest = RandomForestClassifier(criterion='entropy')
+        forest = RandomForestClassifier(n_estimators=10000, random_state=0, n_jobs=-1)
         forest.fit(x, y)
         importances = forest.feature_importances_
         indices = np.argsort(importances)[::-1]

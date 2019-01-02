@@ -5,9 +5,10 @@ from lib.preprocessing import Preprocessing
 from lib.postprocessing import Postprocessing
 from lib.ai import AI
 from lib.statistics import Statistics
+from lib.accuracy.cross_validation import MultimodelCrossValidator
 from os import listdir
 from os.path import isfile, join
-from config import DATA_FREQUENCY, NEED_PREPROCESSING, DATA_PATH, ORIGINALS_PATH, OUT_FILE
+from config import DATA_FREQUENCY, NEED_PREPROCESSING, DATA_PATH, ORIGINALS_PATH, OUT_FILE, INITIAL_ESTIMATORS
 import matplotlib.pyplot as plt
 
 import warnings
@@ -21,7 +22,7 @@ class Main:
         #     self._show_menu()
         #     option = input()
         #     self._handle_input(option)
-        self._handle_input("4")
+        self._handle_input("7")
 
     def _handle_input(self, input):
         if input == "0":
@@ -39,6 +40,12 @@ class Main:
             self._analyse_predictions()
         elif input == "6":
             self._show_statistics()
+        elif input == "7":
+            self._validate_estimators()
+
+    ###########################################################################
+    # METHODS THAT HANDLE INPUT                                               #
+    ###########################################################################
 
     def _train_model(self):
         print("Training model")
@@ -50,7 +57,6 @@ class Main:
 
     def _sbs_scores(self):
         print("Looking for best features...")
-        main.EXTRACT_ALL_FEATURES = True
         x, y = self._get_data_tuples()
         ai = AI()
         sbs = ai.sbs_score(x, y)
@@ -62,12 +68,14 @@ class Main:
         plt.grid()
         plt.show()
 
-        k5 = list(sbs.subsets_[8])
-        print(k5)
+        for subset in sbs.subsets_:
+            if len(subset) == 4:
+                k4 = list(subset)
+                print(k4)
+                break
 
     def _reverse_sbs_scores(self):
         print("Looking for best features...")
-        main.EXTRACT_ALL_FEATURES = True
         x, y = self._get_data_tuples()
         print(len(y))
         ai = AI()
@@ -82,7 +90,6 @@ class Main:
 
     def _random_forest_scores(self):
         print("Looking for best features...")
-        main.EXTRACT_ALL_FEATURES = False
         x, y = self._get_data_tuples()
         ai = AI()
         ai.random_forest_score(x, y, Preprocessing.get_labels())
@@ -96,6 +103,39 @@ class Main:
         print(f"Main accuracy = {main}")
         print(detail)
 
+    def _show_statistics(self):
+        print("Creating statistics...")
+        main.EXTRACT_ALL_FEATURES = True
+        x, y = self._get_data_tuples()
+        labels = Preprocessing.get_labels()
+        # print(y)
+        stats = Statistics(x, y, labels)
+        stats.create()
+
+    def _validate_estimators(self):
+        x, y = self._get_data_tuples()
+        print("Validating estimators with default parameters")
+
+        validator = MultimodelCrossValidator(x, y, INITIAL_ESTIMATORS)
+        results = validator.validate_all()
+        results.sort(key=lambda el: el[0], reverse=True)
+
+        print("Final scores:")
+        for mean, name in results:
+            print(f"{name}: {mean}")
+
+    ###########################################################################
+    # OTHER PRIVATE METHODS                                                   #
+    ###########################################################################
+
+    def _show_menu(self):
+        print("Choose an option:")
+        print("1 - Train model")
+        print("2 - SBS")
+        print("3 - Random Forest scores")
+        print("4 - Reverse SBS scores")
+        print("0 - exit")
+
     def _get_data_tuples(self):
         if NEED_PREPROCESSING:
             people = self._process_people(DATA_PATH)
@@ -108,23 +148,6 @@ class Main:
         x_scaled = pp.standarize(x)
 
         return x_scaled, y
-
-    def _show_statistics(self):
-        print("Creating statistics...")
-        main.EXTRACT_ALL_FEATURES = True
-        x, y = self._get_data_tuples()
-        labels = Preprocessing.get_labels()
-        # print(y)
-        stats = Statistics(x, y, labels)
-        stats.create()
-
-    def _show_menu(self):
-        print("Choose an option:")
-        print("1 - Train model")
-        print("2 - SBS")
-        print("3 - Random Forest scores")
-        print("4 - Reverse SBS scores")
-        print("0 - exit")
 
     def _process_people(self, directory):
         files = [f for f in listdir(directory) if isfile(join(directory, f))]
@@ -148,6 +171,7 @@ class Main:
                 person_sample_count = len(person)
                 print(f"{file} done. Got data from {person_sample_count} videos.")
                 num_samples += person_sample_count
+                print(f"Has {num_samples} already")
             except Exception:
                 # raise
                 pass

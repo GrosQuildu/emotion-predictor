@@ -57,8 +57,9 @@ class NewGSR:
 
     def get_best_features(self):
         return OrderedDict([
-            ('decrease_rate_avg', self.decrease_rate_avg()),
-            ('avg_gsr', self.avg())
+            ('local_minima_count', self.local_minima_count()),
+            ('local_maxima_count', self.local_maxima_count()),
+            ('derivative_negative_to_all', self.derivative_negative_to_all())
         ])
 
     def get_all_features(self):
