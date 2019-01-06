@@ -8,7 +8,8 @@ from lib.statistics import Statistics
 from lib.accuracy.cross_validation import MultimodelCrossValidator
 from os import listdir
 from os.path import isfile, join
-from config import DATA_FREQUENCY, NEED_PREPROCESSING, DATA_PATH, ORIGINALS_PATH, OUT_FILE, INITIAL_ESTIMATORS
+from config import DATA_FREQUENCY, NEED_PREPROCESSING, DATA_PATH, ORIGINALS_PATH, OUT_FILE, INITIAL_ESTIMATORS, \
+    OPTIMIZED_ESTIMATORS
 import matplotlib.pyplot as plt
 
 import warnings
@@ -22,7 +23,7 @@ class Main:
         #     self._show_menu()
         #     option = input()
         #     self._handle_input(option)
-        self._handle_input("7")
+        self._handle_input("9")
 
     def _handle_input(self, input):
         if input == "0":
@@ -42,6 +43,10 @@ class Main:
             self._show_statistics()
         elif input == "7":
             self._validate_estimators()
+        elif input == "8":
+            self._optimize_best_estimators()
+        elif input == "9":
+            self._validate_optimized_estimators()
 
     ###########################################################################
     # METHODS THAT HANDLE INPUT                                               #
@@ -114,9 +119,29 @@ class Main:
 
     def _validate_estimators(self):
         x, y = self._get_data_tuples()
-        print("Validating estimators with default parameters")
+        print("Validating models with default parameters")
 
         validator = MultimodelCrossValidator(x, y, INITIAL_ESTIMATORS)
+        results = validator.validate_all()
+        results.sort(key=lambda el: el[0], reverse=True)
+
+        print("Final scores:")
+        for mean, name in results:
+            print(f"{name}: {mean}")
+
+    def _optimize_best_estimators(self):
+        x, y = self._get_data_tuples()
+        print("Optimizing model")
+
+        ai = AI()
+        score, params = ai.optimize_best_estimators(x, y)
+        print(score, params)
+
+    def _validate_optimized_estimators(self):
+        x, y = self._get_data_tuples()
+        print("Validating models with optimized parameters")
+
+        validator = MultimodelCrossValidator(x, y, OPTIMIZED_ESTIMATORS)
         results = validator.validate_all()
         results.sort(key=lambda el: el[0], reverse=True)
 
@@ -134,6 +159,10 @@ class Main:
         print("2 - SBS")
         print("3 - Random Forest scores")
         print("4 - Reverse SBS scores")
+        print("5 - Random Forest scores")
+        print("6 - Show statistics")
+        print("7 - Validate estimators")
+        print("8 - Optimize best estimators")
         print("0 - exit")
 
     def _get_data_tuples(self):

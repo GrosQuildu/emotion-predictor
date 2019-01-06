@@ -1,9 +1,7 @@
 import numpy as np
 from sklearn.model_selection import cross_val_score
-from sklearn.decomposition import PCA
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 from config import CPU_CORES_NUM
+from lib.classifier.group import create_majority_voting_classifier
 
 
 class MultimodelCrossValidator:
@@ -15,21 +13,24 @@ class MultimodelCrossValidator:
     def validate_all(self):
         scores = []
         for estimator in self.estimators:
-            estimator_name = estimator.__name__
+            if isinstance(estimator, tuple):
+                estimator_class = estimator[0]
+                params = estimator[1]
+            else:
+                estimator_class = estimator
+                params = {}
+            estimator_name = estimator_class.__name__
             print(f"Validating {estimator_name}")
-            mean, std = self._validate(estimator, n_threads=CPU_CORES_NUM, n_subsets=20)
+            mean, std = self._validate(estimator_class(**params), n_threads=CPU_CORES_NUM, n_subsets=20)
             scores.append((mean, estimator_name))
+
+        mean, std = self._validate(create_majority_voting_classifier(), n_threads=CPU_CORES_NUM, n_subsets=20)
+        scores.append((mean, 'VotingClassifier'))
 
         return scores
 
-    def _validate(self, estimator, n_threads=1, n_subsets=10):
-        pipe_lr = Pipeline([
-            ('scl', StandardScaler()),
-            ('pca', PCA(n_components=2)),
-            ('clf', estimator())
-        ])
-
-        scores = cross_val_score(estimator=pipe_lr, X=self.x_train, y=self.y_train, cv=n_subsets, n_jobs=n_threads)
+    def _validate(self, estimator, n_threads=1, n_subsets=20):
+        scores = cross_val_score(estimator=estimator, X=self.x_train, y=self.y_train, cv=n_subsets, n_jobs=n_threads)
         mean = np.mean(scores)
         std = np.std(scores)
         print("Results of cross validation: ", scores)

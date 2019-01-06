@@ -1,18 +1,15 @@
 import numpy as np
 from sklearn import model_selection
 from sklearn.metrics import accuracy_score
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model import RandomizedLogisticRegression
-from sklearn.linear_model import LinearRegression
+from lib.optimizing.grid_search import GridSearchOptimizer
 from sklearn.svm import SVC
 from lib.accuracy.sbs import SBS
 from lib.accuracy.reverse_sbs import ReverseSBS
 from lib.prediction_analyser import PredictionAnalyser
-from config import VALIDATION_SIZE, SEED
+from config import VALIDATION_SIZE, SEED, OPTIMIZED_ESTIMATORS
+from lib.classifier.group import create_majority_voting_classifier, create_ada_boosted_classifier
 
 
 class AI:
@@ -66,6 +63,25 @@ class AI:
 
         for f in range(len(x[0])):
             print("%2d %-*s %f" % (f + 1, 30, labels[indices[f]], importances[indices[f]]))
+
+    def optimize_best_estimators(self, x, y):
+        svc_model, svc_params = OPTIMIZED_ESTIMATORS[0]
+        dtc_model, dtc_params = OPTIMIZED_ESTIMATORS[3]
+
+        optimizer = GridSearchOptimizer()
+
+        param_grid = [
+            {
+                'n_estimators': [1, 2, 3, 4]
+            }
+        ]
+
+        return optimizer.optimize(
+            AdaBoostClassifier(random_state=1, base_estimator=svc_model(**svc_params)),
+            param_grid,
+            x,
+            y
+        )
 
     def _split_data(self, x, y):
         x_tr, x_val, y_tr, y_val = model_selection.train_test_split(x, y, test_size=VALIDATION_SIZE, random_state=SEED)
