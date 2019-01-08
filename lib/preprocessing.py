@@ -1,11 +1,12 @@
 import numpy
-import matplotlib.pyplot as plt
+
+from config import EXTRACT_ALL_FEATURES, NEED_PREPROCESSING, SIGNAL_BEGIN, SIGNAL_END, SHOW_PLOTS
+from lib.originals import Originals
 from lib.signals.new_bvp import NewBVP
 from lib.signals.new_gsr import NewGSR
-from lib.originals import Originals
-from config import EXTRACT_ALL_FEATURES, NEED_PREPROCESSING, SIGNAL_BEGIN, SIGNAL_END
 
 
+# channel numbers in initially preprocessed files
 CHANNELS = {
     'bvp': 38,
     'gsr': 36
@@ -29,8 +30,8 @@ class Preprocessing:
         try:
             # BVP comes downsampled while GSR comes with original frequency (512 Hz)
             base_bvp, base_gsr = self._org.get_person_resting_values(original_file, file_number)
-            heart_avg = self._get_base_bvp_features(base_bvp)
-            gsr_avg = self._get_base_gsr_features(base_gsr, "avg_{}".format(file_number))
+            heart_avg = self.get_base_bvp_features(base_bvp)
+            gsr_avg = self.get_base_gsr_features(base_gsr, filename="avg_{}".format(file_number))
         except Exception:
             print(f"Malformed data when processing baseline of {file_number}")
             raise
@@ -39,8 +40,11 @@ class Preprocessing:
         person_result = []
         for i in range(len(data['data'])):
             try:
-                heart = self._get_bvp_features(data['data'][i], start=SIGNAL_BEGIN, stop=SIGNAL_END)
-                gsr = self._get_gsr_features(data['data'][i], "video_{}_{}".format(file_number, i), start=SIGNAL_BEGIN, stop=SIGNAL_END)
+                heart = self._get_bvp_features(data['data'][i])
+                gsr = self._get_gsr_features(
+                    data['data'][i],
+                    filename="video_{}_{}".format(file_number, i)
+                )
 
                 video_result = {
                     'heart': heart,
@@ -53,41 +57,57 @@ class Preprocessing:
                 print(f"Malformed data when processing video {i}")
                 continue
 
-        person_result = self._convert_features_to_diffs(person_result, heart_avg, gsr_avg)
+        person_result = self._calculate_feature_diffs(person_result, heart_avg, gsr_avg)
         return person_result
 
-    def _get_bvp_features(self, data, start=0, stop=0):
-        bvp_signal = self._trim_signal(data[CHANNELS['bvp']], self._data_frequency, start=start, stop=stop)
-        bvp = NewBVP(
-            bvp_signal,
-            self._data_frequency,
-            show_plot=False
-        )
-        return bvp.get_features(extract_all_features=EXTRACT_ALL_FEATURES)
+    def get_diffed_values(self, bvp, gsr, base_bvp_features, base_gsr_features):
+        bvp_features = self._get_bvp_features(bvp)
+        gsr_features = self._get_gsr_features(gsr, None)
 
-    def _get_gsr_features(self, data, filename, start=0, stop=0):
-        gsr_signal = self._trim_signal(data[CHANNELS['gsr']], self._data_frequency, start=start, stop=stop)
-        gsr = NewGSR(
-            gsr_signal,
-            self._data_frequency,
-            filename=filename,
-            file=NEED_PREPROCESSING,
-            plot=False
-        )
-        return gsr.get_features(extract_all_features=EXTRACT_ALL_FEATURES)
+        features = []
 
-    def _get_base_bvp_features(self, bvp):
+        for key, value in bvp_features:
+            bvp_features[key] = base_bvp_features[key] - bvp_features[key]
+            features.append(bvp_features[key])
+
+        for key, value in gsr_features:
+            gsr_features[key] = base_gsr_features[key] - gsr_features[key]
+            features.append(gsr_features[key])
+
+        return features
+
+    def get_base_bvp_features(self, bvp):
         bvp = NewBVP(
             bvp,
             self._data_frequency
         )
         return bvp.get_features(extract_all_features=EXTRACT_ALL_FEATURES)
 
-    def _get_base_gsr_features(self, gsr, filename):
+    def get_base_gsr_features(self, gsr, filename=None):
         gsr = NewGSR(gsr, 512, filename=filename, file=NEED_PREPROCESSING)
         return gsr.get_features(extract_all_features=EXTRACT_ALL_FEATURES)
 
-    def _convert_features_to_diffs(self, person_data, heart_avg, gsr_avg):
+    def _get_bvp_features(self, data):
+        bvp_signal = self._trim_signal(data[CHANNELS['bvp']], self._data_frequency, start=SIGNAL_BEGIN, stop=SIGNAL_END)
+        bvp = NewBVP(
+            bvp_signal,
+            self._data_frequency,
+            show_plot=SHOW_PLOTS
+        )
+        return bvp.get_features(extract_all_features=EXTRACT_ALL_FEATURES)
+
+    def _get_gsr_features(self, data, filename=None):
+        gsr_signal = self._trim_signal(data[CHANNELS['gsr']], self._data_frequency, start=SIGNAL_BEGIN, stop=SIGNAL_END)
+        gsr = NewGSR(
+            gsr_signal,
+            self._data_frequency,
+            filename=filename,
+            file=NEED_PREPROCESSING,
+            show_plot=SHOW_PLOTS
+        )
+        return gsr.get_features(extract_all_features=EXTRACT_ALL_FEATURES)
+
+    def _calculate_feature_diffs(self, person_data, heart_avg, gsr_avg):
         for i in person_data:
             for key in i['heart']:
                 i['heart'][key] = heart_avg[key] - i['heart'][key]
@@ -112,60 +132,6 @@ class Preprocessing:
         stop *= frequency
 
         return signal[start:stop]
-
-    ############ LEGACY METHODS ############
-
-    def _show_bpm_plot(self, data, video_id):
-        x = [i[0] / self._data_frequency for i in data[video_id]['bpm']]
-        y = [i[1] for i in data[video_id]['bpm']]
-
-        plt.figure(figsize=(32, 6))
-        plt.plot(x, y, 'b-')
-        plt.title("BPM plot (valence={} , arousal={})".format(
-            data[video_id]['valence'],
-            data[video_id]['arousal']
-        ))
-        plt.grid()
-        plt.show()
-
-    def _show_gsr_plot(self, data, video_id):
-        x = [i[0] / self._data_frequency for i in data[video_id]['gsr']]
-        y = [i[1] for i in data[video_id]['gsr']]
-
-        plt.figure(figsize=(32, 6))
-        plt.plot(x, y, 'b-')
-        plt.title("BPM plot (valence={} , arousal={})".format(
-            data[video_id]['valence'],
-            data[video_id]['arousal']
-        ))
-        plt.grid()
-        plt.show()
-
-    def _show_combined_plot(self, bpm, gsr, valence, arousal, normalize=False):
-        x_bpm = []
-        y_bpm = []
-        for i in bpm:
-            x_bpm.append(i[0])
-            y_bpm.append(i[1])
-
-        x_gsr = []
-        y_gsr = []
-        for i in gsr:
-            x_gsr.append(i[0])
-            if normalize:
-                y_gsr.append(i[1]/1000)
-            else:
-                y_gsr.append(i[1])
-
-        plt.figure(figsize=(32, 6))
-        plt.plot(x_bpm, y_bpm, 'r-', x_gsr, y_gsr, 'b-')
-        plt.title(f"Combined plot (valence={valence} , arousal={arousal})")
-        plt.grid()
-        plt.show()
-
-    def _get_percentage_diff(self, value, avg):
-        diff = value - avg
-        return (diff/avg)*100
 
     @staticmethod
     def get_labels():

@@ -1,10 +1,10 @@
+import pickle
+from collections import OrderedDict
+from statistics import mean
 import matplotlib.pyplot as plt
 import neurokit as nk
 import numpy as np
-import pickle
 import pandas as pd
-from statistics import mean, StatisticsError
-from collections import OrderedDict
 
 
 class NewGSR:
@@ -23,14 +23,14 @@ class NewGSR:
         'rising_time' #21
     ]
 
-    def __init__(self, signal, freq, file=False, filename=None, plot=False):
+    def __init__(self, signal, freq, file=False, filename=None, show_plot=False):
         self._y = signal
         self._freq = freq
         self._derivative = self._get_derivative(signal)
         name = "neurokit/{}.dat".format(filename)
         if file:
             self.data = nk.eda_process(signal, sampling_rate=freq)
-            if plot:
+            if show_plot:
                 nk.plot_events_in_signal(nk.z_score(self.data["df"]), self.data["EDA"]["SCR_Peaks_Indexes"])
                 print(self.data["EDA"]["SCR_Peaks_Indexes"])
                 plt.show()
@@ -64,24 +64,19 @@ class NewGSR:
 
     def get_all_features(self):
         return OrderedDict([
-            ('avg_gsr', self.avg()), #10
-            ('tonic_avg', self.tonic_avg()), #11
-            ('phasic_avg', self.phasic_avg()), #12
-            ('peak_count', self.peak_count()), #13
-            ('amplitude_avg', self.amplitude_avg()), #14
-            ('max_amplitude', self.max_aplitude()), #15
-            ('derivative_avg', self.derivative_avg()), #16
-            ('decrease_rate_avg', self.decrease_rate_avg()), #17
-            ('derivative_negative_to_all', self.derivative_negative_to_all()), #18
-            ('local_minima_count', self.local_minima_count()), #19
-            ('local_maxima_count', self.local_maxima_count()), #20
-            ('rising_time', self.rising_time()) #21
+            ('avg_gsr', self.avg()),                                            #10
+            ('tonic_avg', self.tonic_avg()),                                    #11
+            ('phasic_avg', self.phasic_avg()),                                  #12
+            ('peak_count', self.peak_count()),                                  #13
+            ('amplitude_avg', self.amplitude_avg()),                            #14
+            ('max_amplitude', self.max_aplitude()),                             #15
+            ('derivative_avg', self.derivative_avg()),                          #16
+            ('decrease_rate_avg', self.decrease_rate_avg()),                    #17
+            ('derivative_negative_to_all', self.derivative_negative_to_all()),  #18
+            ('local_minima_count', self.local_minima_count()),                  #19
+            ('local_maxima_count', self.local_maxima_count()),                  #20
+            ('rising_time', self.rising_time())                                 #21
         ])
-        # return {
-        #     'tonic_avg': self.tonic_avg(),
-        #     'phasic_avg': self.phasic_avg(),
-        #     'decrease_rate_avg': self.decrease_rate_avg()
-        # }
 
     def avg(self):
         return mean(self._y)

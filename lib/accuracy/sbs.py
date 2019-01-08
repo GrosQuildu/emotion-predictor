@@ -1,8 +1,9 @@
-from sklearn.base import clone
 from itertools import combinations
+
 import numpy as np
-from sklearn.model_selection import train_test_split
+from sklearn.base import clone
 from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 
 """
 This should be done after gathering all features from both BVP and GSR
@@ -60,8 +61,8 @@ class SBS:
     def transform(self, X):
         return X[:, self.indices_]
 
-    def _calc_score(self, X_train, y_train, X_test, y_test, indices):
-        self.estimator.fit(X_train[:, indices], y_train)
-        y_pred = self.estimator.predict(X_test[:, indices])
+    def _calc_score(self, x_train, y_train, x_test, y_test, indices):
+        self.estimator.fit(x_train[:, indices], y_train)
+        y_pred = self.estimator.predict(x_test[:, indices])
         score = self.scoring(y_test, y_pred)
         return score

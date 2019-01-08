@@ -19,6 +19,7 @@ DATA_FREQUENCY = 128
 # SWITCHES
 NEED_PREPROCESSING = False
 EXTRACT_ALL_FEATURES = False
+SHOW_PLOTS = False
 
 # SIGNAL TRIMMING
 SIGNAL_BEGIN = 20
@@ -32,7 +33,7 @@ SEED = 1
 INITIAL_ESTIMATORS = [
     MLPClassifier,
     KNeighborsClassifier,
-    (SVC),
+    SVC,
     GaussianProcessClassifier,
     DecisionTreeClassifier,
     RandomForestClassifier,

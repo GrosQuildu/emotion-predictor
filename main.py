@@ -1,64 +1,80 @@
-import sys
 import pickle
 import re
-from lib.preprocessing import Preprocessing
-from lib.postprocessing import Postprocessing
-from lib.ai import AI
-from lib.statistics import Statistics
-from lib.accuracy.cross_validation import MultimodelCrossValidator
+import sys
+import warnings
 from os import listdir
 from os.path import isfile, join
-from config import DATA_FREQUENCY, NEED_PREPROCESSING, DATA_PATH, ORIGINALS_PATH, OUT_FILE, INITIAL_ESTIMATORS, \
-    OPTIMIZED_ESTIMATORS
 import matplotlib.pyplot as plt
 
-import warnings
+from config import DATA_FREQUENCY, NEED_PREPROCESSING, DATA_PATH, ORIGINALS_PATH, OUT_FILE, INITIAL_ESTIMATORS, \
+    OPTIMIZED_ESTIMATORS
+from lib.accuracy.cross_validation import MultimodelCrossValidator
+from lib.ai import AI
+from lib.postprocessing import Postprocessing
+from lib.preprocessing import Preprocessing
+from lib.statistics import Statistics
+from lib.predictor import Predictor
+
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 
 
 class Main:
     def loop(self):
-        # while True:
-        #     self._show_menu()
-        #     option = input()
-        #     self._handle_input(option)
-        self._handle_input("9")
+        while True:
+            self._show_menu()
+            option = input()
+            self._handle_input(option)
 
-    def _handle_input(self, input):
-        if input == "0":
+    def _handle_input(self, value):
+        if value == "0":
             print("Finishing...")
             sys.exit(0)
-        if input == "1":
+        if value == "1":
             self._train_model()
-        elif input == "2":
+        elif value == "2":
             self._sbs_scores()
-        elif input == "3":
+        elif value == "3":
             self._random_forest_scores()
-        elif input == "4":
+        elif value == "4":
             self._reverse_sbs_scores()
-        elif input == "5":
+        elif value == "5":
             self._analyse_predictions()
-        elif input == "6":
+        elif value == "6":
             self._show_statistics()
-        elif input == "7":
+        elif value == "7":
             self._validate_estimators()
-        elif input == "8":
+        elif value == "8":
             self._optimize_best_estimators()
-        elif input == "9":
+        elif value == "9":
             self._validate_optimized_estimators()
+        elif value == "10":
+            self._analyze_classes()
+        elif value == "11":
+            self._run_predicting()
+        else:
+            print("Incorrect input")
 
     ###########################################################################
     # METHODS THAT HANDLE INPUT                                               #
     ###########################################################################
 
+    def _run_predicting(self):
+        x, y = self._get_data_tuples()
+
+        print("Enter signal frequency (Hz): ")
+        frequency = input()
+
+        ai = AI()
+        model = ai.get_best_model(x, y)
+        predictor = Predictor(frequency, model)
+
     def _train_model(self):
         print("Training model")
         x, y = self._get_data_tuples()
         ai = AI()
-        ai.load_data(x, y)
 
-        ai.test()
+        ai.simple_test(x, y)
 
     def _sbs_scores(self):
         print("Looking for best features...")
@@ -103,8 +119,7 @@ class Main:
         print("Analysing predictions")
         x, y = self._get_data_tuples()
         ai = AI()
-        ai.load_data(x, y)
-        main, detail = ai.split_predictions()
+        main, detail = ai.split_predictions(x, y)
         print(f"Main accuracy = {main}")
         print(detail)
 
@@ -149,6 +164,22 @@ class Main:
         for mean, name in results:
             print(f"{name}: {mean}")
 
+    def _analyze_classes(self):
+        x, y = self._get_data_tuples()
+
+        class_count = {}
+        for cl in y:
+            if cl not in class_count:
+                class_count[cl] = 0
+
+            class_count[cl] += 1
+
+        all = len(y)
+        for cl in class_count:
+            class_count[cl] = class_count[cl]/all*100
+
+        print(class_count)
+
     ###########################################################################
     # OTHER PRIVATE METHODS                                                   #
     ###########################################################################
@@ -163,6 +194,9 @@ class Main:
         print("6 - Show statistics")
         print("7 - Validate estimators")
         print("8 - Optimize best estimators")
+        print("9 - Validate optimized estimators")
+        print("10 - Show class statistics")
+        print("11 - Predict emotions on live data")
         print("0 - exit")
 
     def _get_data_tuples(self):
@@ -186,9 +220,6 @@ class Main:
 
         print("Starting preprocessing")
         for file in files:
-            # if file == "s23.dat":
-            #     break
-
             try:
                 number = self._get_file_number(file)
                 person = preproc.process_person(
@@ -200,7 +231,7 @@ class Main:
                 person_sample_count = len(person)
                 print(f"{file} done. Got data from {person_sample_count} videos.")
                 num_samples += person_sample_count
-                print(f"Has {num_samples} already")
+                print(f"Has {num_samples} samples already")
             except Exception:
                 # raise
                 pass

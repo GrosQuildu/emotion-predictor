@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.model_selection import cross_val_score
+
 from config import CPU_CORES_NUM
 from lib.classifier.group import create_majority_voting_classifier
 

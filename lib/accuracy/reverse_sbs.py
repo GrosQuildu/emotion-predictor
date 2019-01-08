@@ -1,10 +1,7 @@
-import operator
-import sys
+from collections import OrderedDict
+from pandas import DataFrame
 from sklearn import model_selection
 from sklearn.metrics import accuracy_score
-from sklearn.ensemble import AdaBoostClassifier
-from pandas import DataFrame
-from collections import OrderedDict
 
 
 class ReverseSBS:
@@ -30,8 +27,6 @@ class ReverseSBS:
                 max_accuracy = i[1]
                 max_accuracy_keys = i[0]
 
-        # if max_accuracy > 0.7:
-        #     print(self.estimator_obj.estimators_)
         return max_accuracy_keys, max_accuracy
 
     def _fit(self, x, y, starting_feature=0):
@@ -43,11 +38,9 @@ class ReverseSBS:
         accuracy_best = self._test_accuracy(x_best, y)
 
         while remaining_features:
-            # accuracy_results = {}
             accuracy_results = OrderedDict()
             for i in remaining_features:
                 x_test = self._add_lists(x_best, x[:, i])
-                # x_test, y_test = self._drop_incorrect(x_test, y)
 
                 accuracy = self._test_accuracy(x_test, y)
                 accuracy_results[i] = accuracy

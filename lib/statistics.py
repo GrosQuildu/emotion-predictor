@@ -1,8 +1,8 @@
-import sys
-import numpy as np
-import matplotlib.pyplot as plt
 from statistics import mean
 from statistics import stdev
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Statistics:

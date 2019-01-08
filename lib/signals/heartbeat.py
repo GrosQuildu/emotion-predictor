@@ -10,8 +10,8 @@ http://www.paulvangent.com/2016/03/30/analyzing-a-discrete-heart-rate-signal-usi
 <part 4 to follow after publication>
 '''
 
-from datetime import datetime
 import time
+from datetime import datetime
 
 import numpy as np
 from scipy.interpolate import UnivariateSpline

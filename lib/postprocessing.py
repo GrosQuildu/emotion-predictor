@@ -1,7 +1,8 @@
-import lib.emotion as em
+from pandas import DataFrame
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
-from pandas import DataFrame
+
+import lib.emotion as em
 
 
 class Postprocessing:

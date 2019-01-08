@@ -1,49 +1,41 @@
 import numpy as np
 from sklearn import model_selection
-from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
-from lib.optimizing.grid_search import GridSearchOptimizer
 from sklearn.svm import SVC
-from lib.accuracy.sbs import SBS
-from lib.accuracy.reverse_sbs import ReverseSBS
-from lib.prediction_analyser import PredictionAnalyser
+
 from config import VALIDATION_SIZE, SEED, OPTIMIZED_ESTIMATORS
-from lib.classifier.group import create_majority_voting_classifier, create_ada_boosted_classifier
+from lib.accuracy.reverse_sbs import ReverseSBS
+from lib.accuracy.sbs import SBS
+from lib.optimizing.grid_search import GridSearchOptimizer
+from lib.prediction_analyser import PredictionAnalyser
 
 
 class AI:
-    def load_data(self, x, y):
+    def simple_test(self, x, y):
         x_tr, x_val, y_tr, y_val = self._split_data(x, y)
-        self._x_tr = x_tr
-        self._x_val = x_val
-        self._y_tr = y_tr
-        self._y_val = y_val
 
-    def test(self):
         model = RandomForestClassifier()
-        # model = LogisticRegression(multi_class='multinomial', solver='lbfgs', C=1.05)
-        # model = SVC()
-        #model = MLPClassifier()
+        model.fit(x_tr, y_tr)
+        predictions = model.predict(x_val)
 
-        model.fit(self._x_tr, self._y_tr)
-        predictions = model.predict(self._x_val)
-
-        scored_value = accuracy_score(self._y_val, predictions)
+        scored_value = accuracy_score(y_val, predictions)
         print(f"Accuracy score is: {scored_value}")
 
-    def split_predictions(self):
+    def split_predictions(self, x, y):
+        x_tr, x_val, y_tr, y_val = self._split_data(x, y)
         model = SVC()
-        model.fit(self._x_tr, self._y_tr)
+        model.fit(x_tr, y_tr)
 
         uniq_classes = set()
-        for label in self._y_val:
+        for label in y_val:
             uniq_classes.add(label)
 
         print(f"Unique classes found: {uniq_classes}")
 
         analyser = PredictionAnalyser(model)
-        return analyser.analyse(self._x_val, self._y_val)
+        return analyser.analyse(x_val, y_val)
 
     def sbs_score(self, x, y):
         knn = KNeighborsClassifier(n_neighbors=2)
@@ -51,7 +43,6 @@ class AI:
         return sbs.fit(x, y)
 
     def reverse_sbs_score(self, x, y):
-        # rev_sbs = ReverseSBS(LogisticRegression)
         rev_sbs = ReverseSBS(SVC, {})
         return rev_sbs.calculate(x, y)
 
@@ -82,6 +73,13 @@ class AI:
             x,
             y
         )
+
+    def get_best_model(self, x, y):
+        model_class, params = OPTIMIZED_ESTIMATORS[1]
+        model = model_class(**params)
+        model.fit(x, y)
+
+        return model
 
     def _split_data(self, x, y):
         x_tr, x_val, y_tr, y_val = model_selection.train_test_split(x, y, test_size=VALIDATION_SIZE, random_state=SEED)

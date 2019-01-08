@@ -1,5 +1,6 @@
-import pyedflib as bdf
 import matplotlib.pyplot as plt
+import pyedflib as bdf
+
 from config import ORIGINALS_PATH
 
 GSR = 40

@@ -1,8 +1,10 @@
+from statistics import mean
+
 import matplotlib.pyplot as plt
 import numpy as np
-from statistics import mean
+
 from lib import emotion
-import sys
+
 
 class Analysis:
     def __init__(self, data):
@@ -24,7 +26,6 @@ class Analysis:
         plt.bar(x + 0.25, values_gsr, color='b', width=0.25)
         plt.xticks(x, labels)
         ax.set_title('GSR basing on valence and arousal')
-
 
         plt.show()
 
