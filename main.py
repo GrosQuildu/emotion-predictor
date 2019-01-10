@@ -20,7 +20,13 @@ warnings.simplefilter(action='ignore', category=UserWarning)
 
 
 class Main:
+    """
+    This is an endpoint class that interacts with user and triggers all actions
+    """
     def loop(self):
+        """
+        Method containing main loop
+        """
         while True:
             self._show_menu()
             option = input()
@@ -119,7 +125,7 @@ class Main:
         print("Analysing predictions")
         x, y = self._get_data_tuples()
         ai = AI()
-        main, detail = ai.split_predictions(x, y)
+        main, detail = ai.analyse_predictions(x, y)
         print(f"Main accuracy = {main}")
         print(detail)
 
@@ -165,6 +171,9 @@ class Main:
             print(f"{name}: {mean}")
 
     def _analyze_classes(self):
+        """
+        Calculates how much samples are in particular classes
+        """
         x, y = self._get_data_tuples()
 
         class_count = {}

@@ -5,6 +5,9 @@ from sklearn.metrics import accuracy_score
 
 
 class ReverseSBS:
+    """
+    This class is an implementation of sequence feature selection algorithm which is used to select best features
+    """
     def __init__(self, estimator, estimator_args, scoring=accuracy_score, test_size=0.2, random_state=1):
         self.estimator = estimator
         self.estimator_args = estimator_args
@@ -13,6 +16,10 @@ class ReverseSBS:
         self.random_state = random_state
 
     def calculate(self, x, y):
+        """
+        Returns best featurs and accomplished model accuracy for given dataset
+        :return:
+        """
         number_of_features = len(x[0])
 
         results = []

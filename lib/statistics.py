@@ -6,6 +6,9 @@ import numpy as np
 
 
 class Statistics:
+    """
+    This class is used to show corelation between physiological signal values and emption classes on graphs
+    """
     def __init__(self, x, y, labels):
         self.x = x
         self.y = y

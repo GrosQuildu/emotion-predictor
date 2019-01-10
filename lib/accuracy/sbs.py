@@ -6,9 +6,10 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
 """
+This class implements a SBS algorithm to select best features and lower dimension
 This should be done after gathering all features from both BVP and GSR
 
-usage:
+sample usage:
 knn = KNeighborsClassifier(n_neighbors=2)
 sbs = SBS(knn, k_features=1)
 sbs.fit(X_train_std, y_train)
@@ -27,6 +28,9 @@ class SBS:
         self.scores_ = None
 
     def fit(self, x, y):
+        """
+        Returns dataset reducent to match given dimension
+        """
         x_train, x_test, y_train, y_test = \
             train_test_split(x, y, test_size=self.test_size,
                              random_state=self.random_state)
@@ -57,9 +61,6 @@ class SBS:
         self.k_score_ = self.scores_[-1]
 
         return self
-
-    def transform(self, X):
-        return X[:, self.indices_]
 
     def _calc_score(self, x_train, y_train, x_test, y_test, indices):
         self.estimator.fit(x_train[:, indices], y_train)

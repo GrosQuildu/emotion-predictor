@@ -1,8 +1,21 @@
+from config import CLASSIFICATION_METHOD
+
 
 def get_class_for_values(valence, arousal):
-    return _get_class_by_both(valence, arousal)
-    # return get_class_by_valence(valence)
-    # return get_class_by_arousal(arousal)
+    """
+    Returns class by given valence and arousal values, regarding the classification method in config
+    :param valence: float, emotional valence
+    :param arousal: float, emotional arousal
+    :return: string, class
+    """
+    if CLASSIFICATION_METHOD == "both":
+        return _get_class_by_both(valence, arousal)
+    if CLASSIFICATION_METHOD == "valence":
+        return _get_class_by_valence(valence)
+    if CLASSIFICATION_METHOD == "arousal":
+        return _get_class_by_arousal(arousal)
+
+    raise ValueError(f"Invalid classification method: {CLASSIFICATION_METHOD}")
 
 
 def _get_class_by_both(valence, arousal):
@@ -26,7 +39,7 @@ def _get_class_by_both(valence, arousal):
         return "vH_aH"
 
 
-def get_class_by_valence(valence):
+def _get_class_by_valence(valence):
     if valence < 4:
         return "vL"
 
@@ -36,7 +49,7 @@ def get_class_by_valence(valence):
     return "vH"
 
 
-def get_class_by_arousal(arousal):
+def _get_class_by_arousal(arousal):
     if arousal < 4:
         return "aL"
 

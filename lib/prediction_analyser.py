@@ -3,6 +3,10 @@ import numpy as np
 
 
 class PredictionAnalyser:
+    """
+    Analyses predictions, showing which classes are predicted better and which are predicted worse.
+    Calculates accuracy and shows plot
+    """
     def __init__(self, model):
         self.model = model
 

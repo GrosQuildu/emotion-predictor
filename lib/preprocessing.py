@@ -19,6 +19,11 @@ class Preprocessing:
         self._org = Originals()
 
     def load_data_from_file(self, file_path):
+        """
+        Loads initially preprocessed files
+        :param file_path: Path to file to load
+        :return: dict containing data and labels
+        """
         loaded = numpy.load(file_path, allow_pickle=True, encoding='bytes')
 
         return {
@@ -27,6 +32,13 @@ class Preprocessing:
         }
 
     def process_person(self, file, original_file, file_number):
+        """
+        Processes all trials showed to a single person
+        :param file: Path to initially preprocessed file
+        :param original_file: Path to original file
+        :param file_number: Person No
+        :return: dict containing information about all trials
+        """
         try:
             # BVP comes downsampled while GSR comes with original frequency (512 Hz)
             base_bvp, base_gsr = self._org.get_person_resting_values(original_file, file_number)
@@ -61,6 +73,9 @@ class Preprocessing:
         return person_result
 
     def get_diffed_values(self, bvp, gsr, base_bvp_features, base_gsr_features):
+        """
+        Calculates features on BVP and GSR features and returns their difference with features from base signals
+        """
         bvp_features = self._get_bvp_features(bvp)
         gsr_features = self._get_gsr_features(gsr, None)
 
@@ -77,6 +92,11 @@ class Preprocessing:
         return features
 
     def get_base_bvp_features(self, bvp):
+        """
+        Returns features from base BVP signal
+        :param bvp:
+        :return:
+        """
         bvp = NewBVP(
             bvp,
             self._data_frequency
@@ -84,6 +104,12 @@ class Preprocessing:
         return bvp.get_features(extract_all_features=EXTRACT_ALL_FEATURES)
 
     def get_base_gsr_features(self, gsr, filename=None):
+        """
+        Returns features from base GSR signal
+        :param gsr:
+        :param filename:
+        :return:
+        """
         gsr = NewGSR(gsr, 512, filename=filename, file=NEED_PREPROCESSING)
         return gsr.get_features(extract_all_features=EXTRACT_ALL_FEATURES)
 
@@ -135,4 +161,7 @@ class Preprocessing:
 
     @staticmethod
     def get_labels():
+        """
+        Returns labels from both BVP and GSR
+        """
         return NewBVP.labels + NewGSR.labels

@@ -73,3 +73,6 @@ OPTIMIZED_ESTIMATORS = [
 
 # MISCELLANEOUS
 CPU_CORES_NUM = 2
+
+# possible values are: valence, arousal, both
+CLASSIFICATION_METHOD = "both"

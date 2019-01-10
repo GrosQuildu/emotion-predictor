@@ -7,10 +7,16 @@ from lib import emotion
 
 
 class Analysis:
+    """
+    Used to analyse the predictions
+    """
     def __init__(self, data):
         self.data = self._group_by_emotion(data)
 
     def make_data_plots(self):
+        """
+        Displays plot showing GSR for given emotions
+        """
         labels = [i for i in self.data]
         n = len(labels)
         x = np.arange(n)
@@ -30,6 +36,9 @@ class Analysis:
         plt.show()
 
     def _group_by_emotion(self, data):
+        """
+        Groups samples by emotion in order to analyse if they are consistent
+        """
         emotions = {}
         for person in data:
             for video in person:

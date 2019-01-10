@@ -1,15 +1,26 @@
 import matplotlib.pyplot as plt
 import pyedflib as bdf
-
 from config import ORIGINALS_PATH
 
+
+# Channel numbers
 GSR = 40
 BVP = 45
 STATUS = 47
 
 
 class Originals:
-    def get_person_resting_values(self, filename, number):
+    """
+    This class is responsible for reading the signals and selecting resting values.
+    """
+    def get_person_resting_values(self, filename, person_number):
+        """
+        Facade for all operations on original files.
+        It uses 2 methods of marking the baseline: by signal value and by time
+        :param filename: Path to the file
+        :param person_number: Number of person
+        :return: Resting BVP and GSR signals
+        """
         reader = bdf.EdfReader(filename)
 
         gsr_signal = reader.readSignal(GSR)
@@ -18,7 +29,7 @@ class Originals:
 
         rest_bvp = self._get_resting_data(bvp_signal, begin, end)
         rest_gsr = gsr_signal[begin:end]
-        if int(number) < 23:
+        if int(person_number) < 23:
             rest_gsr = self._convert_gsr_values(rest_gsr)
 
         return rest_bvp, rest_gsr
@@ -41,7 +52,6 @@ class Originals:
         end = None
         mode = 0
 
-        # print(f"0:00:00: start of the experiment")
         for index, value in enumerate(status):
             value = self.get_least_byte(int(value))
             if value != current:
@@ -50,8 +60,6 @@ class Originals:
 
                 change = (index - last_index) / 512
                 sum += change
-                # time = datetime.timedelta(seconds=sum)
-                # print(f"{# time}: Value {current} length {change}s , mode={mode}")
                 if current == 1:
                     mode += 1
 

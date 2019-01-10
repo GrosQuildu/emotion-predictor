@@ -1,10 +1,12 @@
 import sys
-
 from lib.postprocessing import Postprocessing
 from lib.preprocessing import Preprocessing
 
 
 class Predictor:
+    """
+    This class is used to predict emotions in practice
+    """
     def __init__(self, freq, model):
         self.freq = freq
         self.model = model
@@ -16,6 +18,9 @@ class Predictor:
         self.base_gsr_features = None
 
     def process(self):
+        """
+        Loop that predicts emotions. After small changes may be used to get signals via pipeline
+        """
         base_bvp, base_gsr = self._get_basic_values()
 
         print("Processing base signals...")
