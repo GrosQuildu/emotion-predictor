@@ -195,17 +195,17 @@ class Main:
 
     def _show_menu(self):
         print("Choose an option:")
-        print("1 - Train model")
-        print("2 - SBS")
-        print("3 - Random Forest scores")
-        print("4 - Reverse SBS scores")
-        print("5 - Random Forest scores")
-        print("6 - Show statistics")
-        print("7 - Validate estimators")
-        print("8 - Optimize best estimators")
-        print("9 - Validate optimized estimators")
-        print("10 - Show class statistics")
-        print("11 - Predict emotions on live data")
+        print("1 - Train model")                    # Basic accuracy test using RandomForestClassifier
+        print("2 - SBS")                            # select features
+        print("3 - Random Forest scores")           # select features
+        print("4 - Reverse SBS scores")             # select features
+        print("5 - Analyze preditctions")           # <- there was a bug here, idk
+        print("6 - Show statistics")                # some plots, idk
+        print("7 - Validate estimators")            # chose best models
+        print("8 - Optimize best estimators")       # select best models' parameters
+        print("9 - Validate optimized estimators")  # test models
+        print("10 - Show class statistics")         # idk
+        print("11 - Predict emotions on live data") #
         print("0 - exit")
 
     def _get_data_tuples(self):

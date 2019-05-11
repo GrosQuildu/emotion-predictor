@@ -41,17 +41,29 @@ class Preprocessing:
         """
         try:
             # BVP comes downsampled while GSR comes with original frequency (512 Hz)
+            # this can be processed ahead of time
+            # because is strongly data-dependent (channels numbers etc)
             base_bvp, base_gsr = self._org.get_person_resting_values(original_file, file_number)
+            # base_bvp: [val1, val2,...], len = X
+            # base_gsr: [val1, val2,...], len = 4*X
+
             heart_avg = self.get_base_bvp_features(base_bvp)
+            # NewBVP -> biosppy.process -> heartbeat
+            # {'feature_name': value, 'feature2_name': value2}
+
             gsr_avg = self.get_base_gsr_features(base_gsr, filename="avg_{}".format(file_number))
+            # NewGSR -> neurokit.eda_process -> statistics
+            # {'feature_name': value, 'feature2_name': value2}
         except Exception:
             print(f"Malformed data when processing baseline of {file_number}")
             raise
 
         data = self.load_data_from_file(file)
         person_result = []
+        # iterate over videos/trials?
         for i in range(len(data['data'])):
             try:
+                # data['data'][i] -> array 40x8064 of channelXdata
                 heart = self._get_bvp_features(data['data'][i])
                 gsr = self._get_gsr_features(
                     data['data'][i],
@@ -68,8 +80,10 @@ class Preprocessing:
             except Exception:
                 print(f"Malformed data when processing video {i}")
                 continue
+        # person_result = [{'heart':{'feature_name': value,...}, 'gsr':{'feature_name': value,...}, 'valence':X, 'arousal':X2}, ...]
 
         person_result = self._calculate_feature_diffs(person_result, heart_avg, gsr_avg)
+        # person_result = [{'heart':{'feature_name': value_avg-value,...}, 'gsr':{'feature_name': value_avg-value,...}, 'valence':X, 'arousal':X2}, ...]
         return person_result
 
     def get_diffed_values(self, bvp, gsr, base_bvp_features, base_gsr_features):

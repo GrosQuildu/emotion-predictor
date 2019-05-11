@@ -11,7 +11,8 @@ from sklearn.tree import DecisionTreeClassifier
 # PATH
 DATA_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_preprocessed_python'
 ORIGINALS_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_original_bdf'
-OUT_FILE = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\processed.dat'
+# OUT_FILE = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\processed.dat'
+OUT_FILE = '/home/gros/studia/eaiib_5/wshop/data/processed.dat'
 
 # FREQUENCY
 DATA_FREQUENCY = 128

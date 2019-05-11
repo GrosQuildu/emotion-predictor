@@ -1,0 +1,88 @@
+data formats:
+for every participant:
+    -three matrices:
+        - with resting data
+        - 2Xn, n = number of samples (amount of data), ~more better
+        - first column: BVP (or BPM) signal, 128Hz, nanoWatt?
+        - second column: GSR signal, 512Hz, Ohm
+
+        - with "emotionized" signals, after viewing pictures
+        - pX2Xn, p = amount of pictures, n = number of samples
+        - for every picture there should be two "columns":
+            - BVP (or BPM) signal, 128Hz, nanoWatt?
+            - GSR signal, 128Hz, Ohm?
+
+        - with valence/arousal
+        - pX2, p = amount of pictures
+        - p must be the same as in "emotionized" matrix
+        - two "columns" with valence and arousal values
+
+
+
+how the code works:
+1 originals/preprocessing/postprocessing is performed before any method that can be called manually from main.py
+    in other words: in all callable methods -> _get_data_tuples()
+        if NEED_PREPROCESSING
+
+            # loop over all persons
+            _process_people() -> preprocessing.process_person()
+
+                # resting values
+                originals.get_person_resting_values()
+                    reads .bdf (original) file
+                    get GSR, BVP and markers
+                    cut signals to moments when there were no emotion factors
+                    BVP to 128Hz (GSR still 512Hz)
+                    convert GSR units (to Ohm) (for person numbers in [1:22])
+                    extract features (as avg values)
+                        BVP: NewBVP -> biosppy -> heartbeat
+                        GSR: NewGSR -> neurokit.eda_process -> statistics
+
+                # "emotionized" values
+                reads .numpy (preprocessed) file
+                cut signals to [SIGNAL_BEGIN:SIGNAL_END] (_trim_signal())
+                extract features
+                    BVP: NewBVP -> biosppy -> heartbeat
+                    GSR: NewGSR -> neurokit.eda_process -> statistics
+
+            save to OUT_FILE
+
+        postprocessing.make_data_tuples()
+            change valence/arousal to class (one of nine)
+            skip measurements with missing features
+            return X, y pair
+
+        standarize (with StandardScaler) X values
+
+
+2 the we can select what to do, the order should be:
+    select optimal features, three possible algorithms:
+        - SBS (only one feature is selected?)
+        - reverse SBS (sequence feature selection method)
+        - random forest
+
+    select best models ("Validate estimators")
+    select models' parameters ("Optimize best estimators")
+    test results ("Validate optimized estimators")
+    do magic ("Predict emotions on live data")
+
+
+todo (plan maksimum):
+    - dane połączone (dominik) są kopnięte, np. ucina pierwszy obrazek i dane spoczynkowe
+
+    - czy dane GEIST mają dobre jednostki?
+    - dane dla stanu spoczynkowego
+    - przyciąć tak, żeby samplowanie było 128Hz
+
+    - przetestować kod na oryginalnych danych, potwierdzić wyniki z pracy inż
+    - ogarnąć format wejściowy danych do kodu
+    - ogarnąć dane GEISTu, coby się format zgadzał
+
+    - mając ogarnięte dane, odpalić kod tak, żeby stworzył model
+    - odpalić predykcje na danych GEISTu i zobaczyć co wyjdzie
+
+    - wybrać najlepsze cechy (na bazie danych GEISTu)
+    - wybrać model(e)
+    - dostroić je
+    - porównać powyższe z tymi wybranymi w pracy inż
+    - odpalić >nasz< wybrany model na danych z pracy inz i zobaczyć co wyjdzie
