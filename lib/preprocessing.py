@@ -31,7 +31,25 @@ class Preprocessing:
             'labels': loaded[b'labels']
         }
 
-    def process_person(self, file, original_file, file_number):
+    def process_person(self, file, resting_file, file_number):
+        """
+        Processes all trials showed to a single person
+        :param file: Path to initially preprocessed file
+        :param resting_file: Path to resting file
+        :param file_number: Person No
+        :return: dict containing information about all trials
+        """
+        try:
+            base_bvp, base_gsr = todo
+            heart_avg = self.get_base_bvp_features(base_bvp)
+            gsr_avg = self.get_base_gsr_features(base_gsr, filename="avg_{}".format(file_number))
+        except Exception:
+            print(f"Malformed data when processing baseline of {file_number}")
+            raise
+        
+
+
+    def process_person_old(self, file, original_file, file_number):
         """
         Processes all trials showed to a single person
         :param file: Path to initially preprocessed file
