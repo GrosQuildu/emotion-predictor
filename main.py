@@ -6,7 +6,8 @@ from os import listdir
 from os.path import isfile, join
 import matplotlib.pyplot as plt
 
-from config import DATA_FREQUENCY, NEED_PREPROCESSING, DATA_PATH, ORIGINALS_PATH, OUT_FILE, INITIAL_ESTIMATORS, \
+from config import DATA_FREQUENCY, NEED_PREPROCESSING, PICKLED_DATA_RESTING, PICKLED_DATA_EMOTIONIZED, \
+    PICKLED_DATA_PICTURES, OUT_FILE, INITIAL_ESTIMATORS, \
     OPTIMIZED_ESTIMATORS
 from lib.accuracy.cross_validation import MultimodelCrossValidator
 from lib.ai import AI
@@ -222,23 +223,16 @@ class Main:
         return x_scaled, y
 
     def _process_people(self, directory):
-        files = [f for f in listdir(directory) if isfile(join(directory, f))]
         preproc = Preprocessing(DATA_FREQUENCY)
         people = []
         num_samples = 0
 
         print("Starting preprocessing")
-        for file in files:
+        for person in preproc.process_person(PICKLED_DATA_EMOTIONIZED, PICKLED_DATA_RESTING, PICKLED_DATA_PICTURES):
             try:
-                number = self._get_file_number(file)
-                person = preproc.process_person(
-                    f"{DATA_PATH}/{file}",
-                    f"{ORIGINALS_PATH}/s{number}.bdf",
-                    number
-                )
                 people.append(person)
                 person_sample_count = len(person)
-                print(f"{file} done. Got data from {person_sample_count} videos.")
+                print(f"next done. Got data from {person_sample_count} images.")
                 num_samples += person_sample_count
                 print(f"Has {num_samples} samples already")
             except Exception:
@@ -246,6 +240,7 @@ class Main:
                 pass
 
         print("Preprocessing finished")
+        NEED_PREPROCESSING = False  # raz powinno wystarczyc afaik
         return people
 
     def _save_to_file(self, data):

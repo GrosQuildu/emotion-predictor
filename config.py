@@ -7,18 +7,29 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
+from os.path import join as pj
 
 # PATH
-DATA_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_preprocessed_python'
-ORIGINALS_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_original_bdf'
-# OUT_FILE = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\processed.dat'
-OUT_FILE = '/home/gros/studia/eaiib_5/wshop/data/processed.dat'
+# DATA_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_preprocessed_python'
+# ORIGINALS_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_original_bdf'
+# # OUT_FILE = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\processed.dat'
+# OUT_FILE = '/home/gros/studia/eaiib_5/wshop/data/processed.dat'
+
+PICKLED_DATA_RESTING = 'preprocessed_geist_resting.pickle'
+PICKLED_DATA_EMOTIONIZED = 'preprocessed_geist_emotionized.pickle'
+PICKLED_DATA_PICTURES = 'preprocessed_geist_pictures.pickle'
+
+base_dir = '/home/gros/studia/eaiib_5/wshop/data/B_experiment'
+PICKLED_DATA_RESTING = pj(base_dir, PICKLED_DATA_RESTING)
+PICKLED_DATA_EMOTIONIZED = pj(base_dir, PICKLED_DATA_RESTING)
+PICKLED_DATA_PICTURES = pj(base_dir, PICKLED_DATA_PICTURES)
+OUT_FILE = pj(base_dir, 'preprocessed_data.dat')
 
 # FREQUENCY
 DATA_FREQUENCY = 128
 
 # SWITCHES
-NEED_PREPROCESSING = False
+NEED_PREPROCESSING = True
 EXTRACT_ALL_FEATURES = False
 SHOW_PLOTS = False
 

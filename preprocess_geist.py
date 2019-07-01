@@ -10,7 +10,7 @@ from os import listdir, path
 from math import floor
 from glob import glob
 import pandas as pd
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import sys
 import csv
 import pickle
@@ -28,7 +28,9 @@ FREQ = 128
 DO_PLOTTING = 0
 DO_LOGS = 0
 
-PICKLED_DATA = 'preprocessed_geist.pickle'
+PICKLED_DATA_RESTING = 'preprocessed_geist_resting.pickle'
+PICKLED_DATA_EMOTIONIZED = 'preprocessed_geist_emotionized.pickle'
+PICKLED_DATA_PICTURES = 'preprocessed_geist_pictures.pickle'
 
 
 def filter_experiments(all_experiments_path):
@@ -101,7 +103,7 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
         plot(Bool) - guess what
 
     Returns:
-        tuple(emotionized, resting, pictures)
+        tuple(emotionized, resting)
             emotionized - dict[picture_names][signal] = [signal_value, signal_value2,...]
             resting - dict[signal] = [signal_value, signal_value2,...]
     '''
@@ -184,6 +186,11 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
             data = pd.merge(data, pictures.reindex(data.index,
                                         method='pad'), left_index=True, right_index=True)
 
+            # todo: emozje wzbudzaja sie dobiero po jakims czasie
+            # tj po kilku sekundach od pokazania obrazka
+            # gosc wycinal jakies kawalki, chyba 15 sekund?
+            # trzeba by to tez tutaj zrobic
+
             for picture_name, data_for_one_picture in data.groupby('picture'):
                 emotionized[picture_name][signal] = data_for_one_picture#.iloc[:,0].values
 
@@ -255,24 +262,31 @@ def preprocess_pictures(pictures_file_path):
 if __name__ == "__main__":
     # get valence/arousal for pictures
     pictures = preprocess_pictures(PATH_PICTURES)
+    with open(PICKLED_DATA_PICTURES, 'wb') as f:
+        pickle.dump(pictures, f)
 
-    if path.isfile(PICKLED_DATA):
+    all_data_emotionized = {}
+    if path.isfile(PICKLED_DATA_EMOTIONIZED):
         try:
-            with open(PICKLED_DATA, 'rb') as f:
-                all_data = pickle.load(f)
+            with open(PICKLED_DATA_EMOTIONIZED, 'rb') as f:
+                all_data_emotionized = pickle.load(f)
         except:
-            all_data = {}
-    else:
-        all_data = {}
+            pass
+
+    all_data_resting = {}
+    if path.isfile(PICKLED_DATA_RESTING):
+        try:
+            with open(PICKLED_DATA_RESTING, 'rb') as f:
+                all_data_resting = pickle.load(f)
+        except:
+            pass
 
     failures = 0
     preprocessed = 0
-    skip_exp = 0
+    skipped = 0
     for i, one_experiment_path in enumerate(filter_experiments(PATH)):
-        if i < skip_exp:
-            continue
-
-        if one_experiment_path in all_data:
+        if one_experiment_path in all_data_emotionized:
+            skipped += 1
             continue
 
         one_experiment_path = path.join(PATH, one_experiment_path)
@@ -281,11 +295,14 @@ if __name__ == "__main__":
             failures += 1
             continue
 
-        all_data[one_experiment_path] = result
+        all_data_emotionized[one_experiment_path] = result[0]
+        all_data_resting[one_experiment_path] = result[1]
         preprocessed += 1
 
-        with open(PICKLED_DATA, 'wb') as f:
-            pickle.dump(all_data, f)
+        with open(PICKLED_DATA_EMOTIONIZED, 'wb') as f:
+            pickle.dump(all_data_emotionized, f)
+        with open(PICKLED_DATA_RESTING, 'wb') as f:
+            pickle.dump(all_data_resting, f)
 
     print('failures: {}\npreprocessed: {}'.format(failures, preprocessed))
         

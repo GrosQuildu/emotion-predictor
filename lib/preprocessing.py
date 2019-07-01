@@ -1,9 +1,10 @@
 import numpy
 
 from config import EXTRACT_ALL_FEATURES, NEED_PREPROCESSING, SIGNAL_BEGIN, SIGNAL_END, SHOW_PLOTS
-from lib.originals import Originals
 from lib.signals.new_bvp import NewBVP
 from lib.signals.new_gsr import NewGSR
+
+import pickle
 
 
 # channel numbers in initially preprocessed files
@@ -16,7 +17,6 @@ CHANNELS = {
 class Preprocessing:
     def __init__(self, data_frequency):
         self._data_frequency = data_frequency
-        self._org = Originals()
 
     def load_data_from_file(self, file_path):
         """
@@ -31,7 +31,7 @@ class Preprocessing:
             'labels': loaded[b'labels']
         }
 
-    def process_person(self, file, resting_file, file_number):
+    def process_person(self, emotionized_file, resting_file, pictures_file):
         """
         Processes all trials showed to a single person
         :param file: Path to initially preprocessed file
@@ -39,13 +39,52 @@ class Preprocessing:
         :param file_number: Person No
         :return: dict containing information about all trials
         """
-        try:
-            base_bvp, base_gsr = todo
-            heart_avg = self.get_base_bvp_features(base_bvp)
-            gsr_avg = self.get_base_gsr_features(base_gsr, filename="avg_{}".format(file_number))
-        except Exception:
-            print(f"Malformed data when processing baseline of {file_number}")
-            raise
+
+        signals = ['BVP', 'GSR']
+
+        with open(emotionized_file, 'rb') as f:
+            data_emotionized = pickle.load(f)
+        with open(resting_file, 'rb') as f:
+            data_resting = pickle.load(f)
+        with open(pictures_file, 'rb') as f:
+            data_pictures = pickle.load(f)
+
+        # lecimy po ekperymentach
+        for experiment_path in data_emotionized.keys():
+            # bierzemy dane spoczynkowe (przed rozpoaczeciem eksperymentu)
+            try:
+                base_bvp, base_gsr = data_resting[experiment_path]['BVP'], data_resting[experiment_path]['GSR']
+                heart_avg = self.get_base_bvp_features(base_bvp)
+                gsr_avg = self.get_base_gsr_features(base_gsr, filename="avg_{}".format(file_number))
+            except Exception:
+                print(f"Malformed data when processing baseline of {file_number}")
+                continue
+
+            person_result = []
+            # lecimy po obrazkach
+            for picture_name, one_image_data in data_emotionized[experiment_path].iteritems():
+                try:
+                    heart = self._get_bvp_features(one_image_data['BVP'])
+                    gsr = self._get_gsr_features(
+                        one_image_data['GSR'],
+                        # that filename should be escaped (it may contains / which may break the function)
+                        filename="video_{}_{}".format(experiment_path, picture_name)
+                    )
+
+                    video_result = {
+                        'heart': heart,
+                        'gsr': gsr,
+                        'valence': data_pictures[picture_name][0],
+                        'arousal': data_pictures[picture_name][1]
+                    }
+                    person_result.append(video_result)
+                except Exception:
+                    print(f"Malformed data when processing image {picture_name}")
+                    continue
+
+            # zwracamy roznice miedzy danymi z emocjami a spoczynkowymi (bez emocji)
+            person_result = self._calculate_feature_diffs(person_result, heart_avg, gsr_avg)
+            yield person_result
         
 
 
@@ -78,7 +117,7 @@ class Preprocessing:
 
         data = self.load_data_from_file(file)
         person_result = []
-        # iterate over videos/trials?
+        # iterate over videos/trials
         for i in range(len(data['data'])):
             try:
                 # data['data'][i] -> array 40x8064 of channelXdata
