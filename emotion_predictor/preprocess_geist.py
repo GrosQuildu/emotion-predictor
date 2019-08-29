@@ -23,6 +23,7 @@ from emotion_predictor.config import PATH_PICTURES
 from emotion_predictor.config import PICKLED_DATA_RESTING
 from emotion_predictor.config import PICKLED_DATA_EMOTIONIZED
 from emotion_predictor.config import PICKLED_DATA_PICTURES
+from emotionized.config import DO_LOGS
 
 TOOLS = {'BITalino': {'BPM.csv':'BVP', 'GSR.csv':'GSR'}}
 FREQ = 128
@@ -30,7 +31,6 @@ FREQ = 128
 MIN_RESTING_TIME = 5  # in second, min time before first picture to count as valid experiment
 
 DO_PLOTTING = 0
-DO_LOGS = 0
 
 def filter_experiments(all_experiments_path):
     '''
@@ -212,18 +212,13 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
             data = pd.merge(data, pictures.reindex(data.index,
                                         method='pad'), left_index=True, right_index=True)
 
-            # todo: emozje wzbudzaja sie dobiero po jakims czasie
-            # tj po kilku sekundach od pokazania obrazka
-            # gosc wycinal jakies kawalki, chyba 15 sekund?
-            # trzeba by to tez tutaj zrobic
-
             for picture_name, data_for_one_picture in data.groupby('picture'):
-                emotionized[picture_name][signal] = data_for_one_picture#.iloc[:,0].values
+                emotionized[picture_name][signal] = data_for_one_picture
 
             # cut values for the last picture
             last_picture = pictures.tail(1).values[0][0]
             one_picture_measurements_mean = sum_of_measurements - len(emotionized[last_picture][signal])
-            one_picture_measurements_mean /= len(emotionized)-1
+            one_picture_measurements_mean /= len(emotionized) - 1
             emotionized[last_picture][signal] = emotionized[last_picture][signal].head(floor(one_picture_measurements_mean))
 
             if do_logs:
@@ -240,6 +235,11 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
                     plt.plot(emotionized[picture_name][signal].index, emotionized[picture_name][signal].value,
                                                                         label=None)
                 plt.show()
+
+            # transform DataFrame to list
+            resting[signal] = resting[signal].values.reshape(1,-1).tolist()[0]
+            for picture_name in pictures.picture:
+                emotionized[picture_name][signal] = emotionized[picture_name][signal].iloc[:,0].values.reshape(1,-1).tolist()[0]
 
         # skip trail pictures
         for picture_name in list(emotionized):
@@ -259,7 +259,7 @@ def preprocess_pictures(pictures_file_path):
     Valence and arousal for pictures
 
     Returns:
-        pictures: dict[picture_name] = (valence, arousal)
+        pictures: dict[picture_name] = {'valence': 1.82, 'arousal': 7.05}
     '''
     print('Preprocessing pictures')
 
@@ -279,8 +279,11 @@ def preprocess_pictures(pictures_file_path):
         if col not in ['picture', 'valence', 'arousal']:
             del pictures[col]
 
-    # print(pictures)
-    return pictures
+    if DO_LOGS:
+        print(pictures)
+
+    pictures_dict = pictures.set_index('picture').to_dict('index')
+    return pictures_dict
 
 
 def main():

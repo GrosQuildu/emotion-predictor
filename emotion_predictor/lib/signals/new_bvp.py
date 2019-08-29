@@ -43,6 +43,7 @@ class NewBVP:
         return result
 
     def _process_signal(self, signal, freq):
+        # print('x',signal[:10], len(signal))
         biosppy_processed = bvp(signal, freq, show=self.plot)
         y_filtered = biosppy_processed['filtered']
         if isinstance(y_filtered, list):

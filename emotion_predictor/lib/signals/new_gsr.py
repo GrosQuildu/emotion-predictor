@@ -27,16 +27,15 @@ class NewGSR:
         self._y = signal
         self._freq = freq
         self._derivative = self._get_derivative(signal)
-        name = "neurokit/{}.dat".format(filename)
         if file:
             self.data = nk.eda_process(signal, sampling_rate=freq)
             if show_plot:
                 nk.plot_events_in_signal(nk.z_score(self.data["df"]), self.data["EDA"]["SCR_Peaks_Indexes"])
                 print(self.data["EDA"]["SCR_Peaks_Indexes"])
                 plt.show()
-            self.save_to_file(name, self.data)
+            self.save_to_file(filename, self.data)
         else:
-            self.data = self.read_from_file(name)
+            self.data = self.read_from_file(filename)
 
     ################### NEUROKIT CACHE METHODS #####################
 

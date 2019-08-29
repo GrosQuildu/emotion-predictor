@@ -43,7 +43,7 @@ Wstępne przetworzenie danych GEIST
 
     * przetworzenie pliku z nacechowaniem emocjonalnym obrazków (NAPS_valence_arousal_2014.csv)
         ```
-        do formatu: dict[picture_name] = (valence, arousal)
+        pictures: dict[picture_name] = {'valence': 1.82, 'arousal': 7.05}
         ```
 
     * przetworzenie sygnałów z BITalino
@@ -58,15 +58,21 @@ Wstępne przetworzenie danych GEIST
         * samplowanie do odpowiedniej częstotliwości
 
         * podział danych na nacechowane emocjonalnie i spoczynkowe
-        ```
-        format danych wyjściowych:
-        emotionized: dict[picture_names][signal] = [signal_value, signal_value2,...]
-        resting: dict[signal] = [signal_value, signal_value2,...]
-        ```
 
         * wykresy z przetworzonymi danymi
 
         * zapis do plików .pickle
+        ```
+        format danych wyjściowych:
+
+        emotionized: dict[path_to_experiment][picture_names][signal] = [signal_value, signal_value2,...]
+        resting: dict[path_to_experiment][signal] = [signal_value, signal_value2,...]
+
+        na przykład:
+
+        ```
 
 Poprawa struktury projektu
+    * dodanie pliku setup.py
 
+    * dodanie skryptów wykonywalnych

@@ -55,7 +55,7 @@ how the code works:
         standarize (with StandardScaler) X values
 
 
-2 the we can select what to do, the order should be:
+2 then we can select what to do, the order should be:
     select optimal features, three possible algorithms:
         - SBS (only one feature is selected?)
         - reverse SBS (sequence feature selection method)

@@ -23,12 +23,19 @@ PICKLED_DATA_RESTING = 'geist_preproc/preprocessed_geist_resting.pickle'
 PICKLED_DATA_EMOTIONIZED = 'geist_preproc/preprocessed_geist_emotionized.pickle'
 PICKLED_DATA_PICTURES = 'geist_preproc/preprocessed_geist_pictures.pickle'
 
+NEUROKIT_PATH = 'neurokit'  # whatever dir that exists
+
+# ---------- not important
 PATH_DATA = pj(BASE_DIR_DATA, PATH_DATA)
 PATH_PICTURES = pj(BASE_DIR_DATA, PATH_PICTURES)
 PICKLED_DATA_RESTING = pj(BASE_DIR_DATA, PICKLED_DATA_RESTING)
 PICKLED_DATA_EMOTIONIZED = pj(BASE_DIR_DATA, PICKLED_DATA_EMOTIONIZED)
 PICKLED_DATA_PICTURES = pj(BASE_DIR_DATA, PICKLED_DATA_PICTURES)
+NEUROKIT_PATH = pj(BASE_DIR_DATA, NEUROKIT_PATH)
 OUT_FILE = pj(BASE_DIR_DATA, 'preprocessed_data.dat')
+# ---------- 
+
+DO_LOGS = 0
 
 # FREQUENCY
 DATA_FREQUENCY = 128
@@ -39,8 +46,8 @@ EXTRACT_ALL_FEATURES = False
 SHOW_PLOTS = False
 
 # SIGNAL TRIMMING
-SIGNAL_BEGIN = 20
-SIGNAL_END = 60
+SIGNAL_BEGIN = 1
+SIGNAL_END = 8
 
 # MACHINE LEARNING
 VALIDATION_SIZE = 0.2

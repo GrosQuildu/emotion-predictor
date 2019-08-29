@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 from emotion_predictor.config import DATA_FREQUENCY, NEED_PREPROCESSING, PICKLED_DATA_RESTING, PICKLED_DATA_EMOTIONIZED, \
     PICKLED_DATA_PICTURES, OUT_FILE, INITIAL_ESTIMATORS, \
-    OPTIMIZED_ESTIMATORS
+    OPTIMIZED_ESTIMATORS, DO_LOGS
 from emotion_predictor.lib.accuracy.cross_validation import MultimodelCrossValidator
 from emotion_predictor.lib.ai import AI
 from emotion_predictor.lib.postprocessing import Postprocessing
@@ -131,13 +131,15 @@ class Main:
         print(detail)
 
     def _show_statistics(self):
+        global EXTRACT_ALL_FEATURES
         print("Creating statistics...")
-        main.EXTRACT_ALL_FEATURES = True
+        EXTRACT_ALL_FEATURES = True
         x, y = self._get_data_tuples()
         labels = Preprocessing.get_labels()
         # print(y)
         stats = Statistics(x, y, labels)
         stats.create()
+        EXTRACT_ALL_FEATURES = False
 
     def _validate_estimators(self):
         x, y = self._get_data_tuples()
@@ -211,24 +213,33 @@ class Main:
 
     def _get_data_tuples(self):
         if NEED_PREPROCESSING:
-            people = self._process_people(DATA_PATH)
+            people = self._process_people()
             self._save_to_file(people)
         else:
             people = self._read_from_file()
-        pp = Postprocessing(DATA_FREQUENCY)
+            
         print("Postprocessing")
+        pp = Postprocessing(DATA_FREQUENCY)
         x, y = pp.make_data_tuples(people)
-        x_scaled = pp.standarize(x)
 
+        if len(x) == 0 or len(y) == 0:
+            print('No people processed / gimme some data')
+            sys.exit(1)
+
+        x_scaled = pp.standarize(x)
         return x_scaled, y
 
-    def _process_people(self, directory):
+    def _process_people(self):
+        global NEED_PREPROCESSING
         preproc = Preprocessing(DATA_FREQUENCY)
         people = []
         num_samples = 0
 
         print("Starting preprocessing")
-        for person in preproc.process_person(PICKLED_DATA_EMOTIONIZED, PICKLED_DATA_RESTING, PICKLED_DATA_PICTURES):
+        for person in preproc.process_person(PICKLED_DATA_EMOTIONIZED,
+                                             PICKLED_DATA_RESTING,
+                                             PICKLED_DATA_PICTURES,
+                                             DO_LOGS):
             try:
                 people.append(person)
                 person_sample_count = len(person)
