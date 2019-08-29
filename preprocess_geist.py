@@ -35,10 +35,10 @@ PICKLED_DATA_PICTURES = 'preprocessed_geist_pictures.pickle'
 
 def filter_experiments(all_experiments_path):
     '''
-    Use only dirs/experiments/persons returned by this function
+    The script will preprocess only dirs(experiments/persons) returned by this function
     Returns: list of paths to experiments
 
-    As for now we use experiments with BITalino with two signals
+    As for now we use experiments which used BITalino and contains both signals
     '''
     experiments = []
     for one_experiment in listdir(all_experiments_path):
@@ -51,13 +51,16 @@ def filter_experiments(all_experiments_path):
         is_experiment_ok = True
 
         # check if all required tools were used in this experiment
-        for tool in TOOLS:
+        tool_id = 0
+        while tool_id < len(TOOLS) and is_experiment_ok:
+            tool = list(TOOLS.keys())[tool_id]
+            tool_id += 1
             if tool not in files_in_one_experiment:
                 is_experiment_ok = False
                 break
 
+            # check if all tools contains required data files (signals)
             files_in_one_tool = listdir(path.join(one_experiment_path, tool))
-            # check if all tools contains required data files
             for required_data_file in TOOLS[tool]:
                 if required_data_file not in files_in_one_tool:
                     is_experiment_ok = False
@@ -81,13 +84,15 @@ def micro_siemens_to_ohm(value):
 def is_trail_picture(picture_name):
     '''
     Skip measurements for pictures for which this func returns True
+    In other words, skip "trail" pictures
     '''
     return 'trail' in picture_name.lower()
 
 
 def normalize_picture_name(picture_name):
     '''
-    rename "pictures\\day1\\Landscapes_120_v.jpg" -> "Landscapes_120_v"
+    Rename "pictures\\day1\\Landscapes_120_v.jpg" -> "Landscapes_120_v"
+           "pictures\\trail\\5.jpg" -> "trail5.jpg"
     '''
     if is_trail_picture(picture_name):
         return ''.join(picture_name.split('\\')[-2:]).rsplit('.', 1)[0]    
@@ -99,8 +104,10 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
     Preprocess one experiments
     Args:
         one_experiment_path(str) - path to directory, should include TOOLS dirs
-                                        and in each TOOLS should be files with signals
-        plot(Bool) - guess what
+                                        and in each TOOLS dir there should be
+                                        correctly named files with signals
+        do_plotting(Bool) - guess what
+        do_logs(Bool) - same
 
     Returns:
         tuple(emotionized, resting)
@@ -109,6 +116,7 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
     '''
     print('preprocessing {}'.format(one_experiment_path))
 
+    # read csv with pictures display times
     pictures_path = glob(path.join(one_experiment_path, '*_timestamp.csv'))[0]
     pictures = pd.read_csv(pictures_path, header=None, names=['picture', 'timestamp'], index_col=1, parse_dates=True)
 
@@ -123,7 +131,8 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
     for picture_name, _ in pictures.groupby('picture'):
         emotionized[picture_name] = {}
 
-    pictures_timezonde_changed = False
+    # preprocess signals from every tool
+    pictures_timezone_changed = False
     for tool in TOOLS:
         for signal_file in TOOLS[tool]:
             signal = TOOLS[tool][signal_file]
@@ -143,12 +152,20 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
                 timezone_to_change = data
                 timezone_base = pictures
 
-            if (timezone_to_change.index.min() - timezone_base.index.min()).seconds >= 1*60*60:
+            timezone_difference = (timezone_to_change.index.min() - timezone_base.index.min()).seconds
+            if timezone_difference >= 1*60*60:  # >= 1h
+                if timezone_difference >= 2*60*60:  # >= 2
+                    print('Broken time (more than hour mismatch), skipping')
+                    return None
+
                 if timezone_to_change is pictures:
-                    if pictures_timezonde_changed:
-                        print('Broken timezones, skipping')
+                    if pictures_timezone_changed:
+                        # well, both signals may have wrong timezone
+                        print('Broken time (signals times are strange), skipping')
                         return None
-                    pictures_timezonde_changed = True
+                    pictures_timezone_changed = True
+
+                print('Fixing timezone')
                 timezone_to_change.index = timezone_to_change.index.map(lambda v: v-pd.Timedelta(hours=1))
                 pictures_start_time = pictures.index.min()
 
@@ -160,7 +177,7 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
             # convert units
             # GSR microSiemens -> Ohm
             if tool == 'BITalino' and signal == 'GSR':
-                data.value = (10**6) / data.value
+                data.value = micro_siemens_to_ohm(data.value)
 
             # BVP microVolt -> nanoWatt?: todo
             if tool == 'BITalino' and signal == 'BVP':
@@ -176,7 +193,7 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
                 return None
 
             # get resting
-            resting[signal] = data[data.index < pictures.index.min()]
+            resting[signal] = data[data.index < pictures_start_time]
 
             # get emotionized
             data = data[data.index >= pictures_start_time]
@@ -196,8 +213,6 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
 
             # cut values for the last picture
             last_picture = pictures.tail(1).values[0][0]
-            # print(last_picture)
-            # print(emotionized)
             one_picture_measurements_mean = sum_of_measurements - len(emotionized[last_picture][signal])
             one_picture_measurements_mean /= len(emotionized)-1
             emotionized[last_picture][signal] = emotionized[last_picture][signal].head(floor(one_picture_measurements_mean))
@@ -235,7 +250,7 @@ def preprocess_pictures(pictures_file_path):
     Valence and arousal for pictures
 
     Returns:
-        pictures - dict[picture_name] = (valence, arousal)
+        pictures: dict[picture_name] = (valence, arousal)
     '''
     print('Preprocessing pictures')
 
@@ -265,6 +280,7 @@ if __name__ == "__main__":
     with open(PICKLED_DATA_PICTURES, 'wb') as f:
         pickle.dump(pictures, f)
 
+    # try to open previously preprocessed data
     all_data_emotionized = {}
     if path.isfile(PICKLED_DATA_EMOTIONIZED):
         try:
@@ -281,10 +297,13 @@ if __name__ == "__main__":
         except:
             pass
 
+    # preprocess more data
     failures = 0
     preprocessed = 0
     skipped = 0
-    for i, one_experiment_path in enumerate(filter_experiments(PATH)):
+    experiments = filter_experiments(PATH)
+
+    for i, one_experiment_path in enumerate(experiments):
         if one_experiment_path in all_data_emotionized:
             skipped += 1
             continue
@@ -304,5 +323,7 @@ if __name__ == "__main__":
         with open(PICKLED_DATA_RESTING, 'wb') as f:
             pickle.dump(all_data_resting, f)
 
-    print('failures: {}\npreprocessed: {}'.format(failures, preprocessed))
+        break
+
+    print('failures: {}\npreprocessed: {}\nskipped: {}'.format(failures, preprocessed, skipped))
         
