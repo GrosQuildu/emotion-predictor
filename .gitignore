@@ -1,1 +1,4 @@
 __pycache__/
+build/
+dist/
+emotion_predictor.egg-info/
