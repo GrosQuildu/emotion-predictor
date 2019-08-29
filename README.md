@@ -16,3 +16,57 @@ All you need to do is:
     * `ORIGINALS_PATH` - should be set to directory where original, unprocessed files (.bdf) are stored.
     * `OUT_FILE` - should be set to exact path to file which will be created in order to cache preprocessing results.
 1. Run `main.py` with Python 3 (prepared for 3.6).
+
+
+#### wshop 19 - GEIST data
+
+##### Uruchomienie
+
+Najpierw ustawić ścieżki w `emotion_predictor/config.py`. Następnie
+
+```python
+mkvirtualenv --python=/usr/bin/python3.7 emotion_predictor
+python ./setup.py build && python ./setup.py install
+
+preprocess_geist  # zainstalowane w ~/.virtualenvs/emotion_predictor/bin/preprocess_geist
+emotion_predictor_main
+```
+
+##### Wykonano
+
+Wstępne przetworzenie danych GEIST
+    * plik preprocess_geist.py (konfiguracja na początku skryptu)
+
+    * korzystanie tylko z pomiarów narzędzia BITalino
+
+    * filtracja eksperymentów (obecność plików itp.)
+
+    * przetworzenie pliku z nacechowaniem emocjonalnym obrazków (NAPS_valence_arousal_2014.csv)
+        ```
+        do formatu: dict[picture_name] = (valence, arousal)
+        ```
+
+    * przetworzenie sygnałów z BITalino
+        * naprawa stref czasowych w plikach
+
+        * pominięcie eksperymentów bez odpowiednio długiego czasu spoczynku
+
+        * pominięcie źle wykonanych eksperymentów (stałe wartości sygnałów)
+
+        * konwersja jednostek (GSR microSiemens -> Ohm)
+
+        * samplowanie do odpowiedniej częstotliwości
+
+        * podział danych na nacechowane emocjonalnie i spoczynkowe
+        ```
+        format danych wyjściowych:
+        emotionized: dict[picture_names][signal] = [signal_value, signal_value2,...]
+        resting: dict[signal] = [signal_value, signal_value2,...]
+        ```
+
+        * wykresy z przetworzonymi danymi
+
+        * zapis do plików .pickle
+
+Poprawa struktury projektu
+

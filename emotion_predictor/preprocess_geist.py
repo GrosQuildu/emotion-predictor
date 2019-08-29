@@ -10,7 +10,7 @@ from os import listdir, path
 from math import floor
 from glob import glob
 import pandas as pd
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import sys
 import csv
 import pickle
@@ -18,20 +18,19 @@ import pickle
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
 
-
-PATH = '/home/gros/studia/eaiib_5/wshop/data/2018-afcai-spring'
-PATH_PICTURES = '/home/gros/studia/eaiib_5/wshop/data/NAPS_valence_arousal_2014.csv'
+from emotion_predictor.config import PATH_DATA
+from emotion_predictor.config import PATH_PICTURES
+from emotion_predictor.config import PICKLED_DATA_RESTING
+from emotion_predictor.config import PICKLED_DATA_EMOTIONIZED
+from emotion_predictor.config import PICKLED_DATA_PICTURES
 
 TOOLS = {'BITalino': {'BPM.csv':'BVP', 'GSR.csv':'GSR'}}
 FREQ = 128
 
+MIN_RESTING_TIME = 5  # in second, min time before first picture to count as valid experiment
+
 DO_PLOTTING = 0
 DO_LOGS = 0
-
-PICKLED_DATA_RESTING = 'preprocessed_geist_resting.pickle'
-PICKLED_DATA_EMOTIONIZED = 'preprocessed_geist_emotionized.pickle'
-PICKLED_DATA_PICTURES = 'preprocessed_geist_pictures.pickle'
-
 
 def filter_experiments(all_experiments_path):
     '''
@@ -111,10 +110,14 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
 
     Returns:
         tuple(emotionized, resting)
-            emotionized - dict[picture_names][signal] = [signal_value, signal_value2,...]
-            resting - dict[signal] = [signal_value, signal_value2,...]
+            emotionized: dict[picture_names][signal] = [signal_value, signal_value2,...]
+            resting: dict[signal] = [signal_value, signal_value2,...]
     '''
-    print('preprocessing {}'.format(one_experiment_path))
+    def log(x):
+        if do_logs:
+            print(x)
+
+    print('Preprocessing {}'.format(one_experiment_path))
 
     # read csv with pictures display times
     pictures_path = glob(path.join(one_experiment_path, '*_timestamp.csv'))[0]
@@ -123,8 +126,7 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
     pictures.picture = pictures.picture.apply(normalize_picture_name)
     pictures_start_time = pictures.index.min()
 
-    if do_logs:
-        print(pictures)
+    log(pictures)
 
     emotionized = {}
     resting = {}
@@ -137,6 +139,8 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
         for signal_file in TOOLS[tool]:
             signal = TOOLS[tool][signal_file]
             data_path = path.join(one_experiment_path, tool, signal_file)
+
+            log('Signal {}'.format(signal))
 
             # read measurements
             data = pd.read_csv(data_path)
@@ -154,29 +158,33 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
 
             timezone_difference = (timezone_to_change.index.min() - timezone_base.index.min()).seconds
             if timezone_difference >= 1*60*60:  # >= 1h
+                log('    Timezone mismatch:\n{} - pictures starts\n{} - data (signal) starts'.format(
+                        pictures_start_time, data.index.min()))
+
                 if timezone_difference >= 2*60*60:  # >= 2
-                    print('Broken time (more than hour mismatch), skipping')
+                    print('    Broken time (more than hour mismatch), skipping')
                     return None
 
                 if timezone_to_change is pictures:
                     if pictures_timezone_changed:
                         # well, both signals may have wrong timezone
-                        print('Broken time (signals times are strange), skipping')
+                        print('    Broken time (signals times are strange), skipping')
                         return None
                     pictures_timezone_changed = True
 
-                print('Fixing timezone')
+                print('    Fixing timezone')
                 timezone_to_change.index = timezone_to_change.index.map(lambda v: v-pd.Timedelta(hours=1))
                 pictures_start_time = pictures.index.min()
 
             # skip if there is (almost) no resting data
-            if (pictures_start_time - data.index.min()).seconds < 5:
-                print('There is not resting data, skipping')
+            if (pictures_start_time - data.index.min()).seconds < MIN_RESTING_TIME:
+                print('    There is not resting data, skipping')
                 return None
 
             # convert units
             # GSR microSiemens -> Ohm
             if tool == 'BITalino' and signal == 'GSR':
+                log('    Converting GSR microSiemens -> Ohm')
                 data.value = micro_siemens_to_ohm(data.value)
 
             # BVP microVolt -> nanoWatt?: todo
@@ -184,12 +192,13 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
                 pass
 
             # sample with correct frequency
+            log('    Sampling frequency')
             freq_div = floor(data.size / (data.index.max() - data.index.min()).seconds / FREQ)
             data = data[::freq_div]
 
             # check if the signal is not constant (f.e. was not measured)
             if len(data[data.value != data.values[0][0]]) == 0:
-                print('{} signal was not measured - skipping'.format(signal))
+                print('    {} signal was not measured - skipping'.format(signal))
                 return None
 
             # get resting
@@ -218,15 +227,14 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
             emotionized[last_picture][signal] = emotionized[last_picture][signal].head(floor(one_picture_measurements_mean))
 
             if do_logs:
-                print(resting[signal].index.min(), resting[signal].index.max(), 'resting')
+                print('    {} - {} | resting '.format(resting[signal].index.min(), resting[signal].index.max()))
                 for picture_name in pictures.picture:
-                    print(emotionized[picture_name][signal].index.min(),
+                    print('    {} - {} | {}'.format(emotionized[picture_name][signal].index.min(),
                         emotionized[picture_name][signal].index.max(),
-                        picture_name)
-                print('-'*40)
+                        picture_name))
 
             if do_plotting:
-                print('do plotting {}'.format(signal))
+                print('    do plotting {}'.format(signal))
                 prev_plot = plt.plot(resting[signal].index, resting[signal].value, label='resting')
                 for picture_name in pictures.picture:
                     plt.plot(emotionized[picture_name][signal].index, emotionized[picture_name][signal].value,
@@ -242,6 +250,7 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
         # use just one tool for now 
         break
 
+    print('-'*40)
     return emotionized, resting
 
 
@@ -274,7 +283,13 @@ def preprocess_pictures(pictures_file_path):
     return pictures
 
 
-if __name__ == "__main__":
+def main():
+    # paths sanity check
+    if not path.isfile(PATH_PICTURES) or not path.isdir(PATH_DATA):
+        print('Configure paths in the script first')
+        print('Now they are: "{}" and "{}"'.format(PATH_PICTURES, PATH_DATA))
+        sys.exit(1)
+
     # get valence/arousal for pictures
     pictures = preprocess_pictures(PATH_PICTURES)
     with open(PICKLED_DATA_PICTURES, 'wb') as f:
@@ -301,14 +316,14 @@ if __name__ == "__main__":
     failures = 0
     preprocessed = 0
     skipped = 0
-    experiments = filter_experiments(PATH)
+    experiments = filter_experiments(PATH_DATA)
 
     for i, one_experiment_path in enumerate(experiments):
         if one_experiment_path in all_data_emotionized:
             skipped += 1
             continue
 
-        one_experiment_path = path.join(PATH, one_experiment_path)
+        one_experiment_path = path.join(PATH_DATA, one_experiment_path)
         result = preprocess_one_experiment(one_experiment_path, do_plotting=DO_PLOTTING, do_logs=DO_LOGS)
         if result is None:
             failures += 1
@@ -323,7 +338,8 @@ if __name__ == "__main__":
         with open(PICKLED_DATA_RESTING, 'wb') as f:
             pickle.dump(all_data_resting, f)
 
-        break
-
     print('failures: {}\npreprocessed: {}\nskipped: {}'.format(failures, preprocessed, skipped))
         
+
+if __name__ == "__main__":
+    main()

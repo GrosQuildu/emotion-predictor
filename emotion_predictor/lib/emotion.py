@@ -1,4 +1,4 @@
-from config import CLASSIFICATION_METHOD
+from emotion_predictor.config import CLASSIFICATION_METHOD
 
 
 def get_class_for_values(valence, arousal):

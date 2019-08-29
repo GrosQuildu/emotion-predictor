@@ -1,5 +1,5 @@
 from sklearn.ensemble import VotingClassifier, AdaBoostClassifier
-from config import OPTIMIZED_ESTIMATORS
+from emotion_predictor.config import OPTIMIZED_ESTIMATORS
 
 
 def create_majority_voting_classifier():

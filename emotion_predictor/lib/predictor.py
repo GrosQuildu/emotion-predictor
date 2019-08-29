@@ -1,6 +1,6 @@
 import sys
-from lib.postprocessing import Postprocessing
-from lib.preprocessing import Preprocessing
+from emotion_predictor.lib.postprocessing import Postprocessing
+from emotion_predictor.lib.preprocessing import Preprocessing
 
 
 class Predictor:

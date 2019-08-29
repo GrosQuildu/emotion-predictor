@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import numpy as np
 from biosppy.signals.bvp import bvp
-import lib.signals.heartbeat as hb
+import emotion_predictor.lib.signals.heartbeat as hb
 
 
 class NewBVP:

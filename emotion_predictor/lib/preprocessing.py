@@ -1,8 +1,8 @@
 import numpy
 
-from config import EXTRACT_ALL_FEATURES, NEED_PREPROCESSING, SIGNAL_BEGIN, SIGNAL_END, SHOW_PLOTS
-from lib.signals.new_bvp import NewBVP
-from lib.signals.new_gsr import NewGSR
+from emotion_predictor.config import EXTRACT_ALL_FEATURES, NEED_PREPROCESSING, SIGNAL_BEGIN, SIGNAL_END, SHOW_PLOTS
+from emotion_predictor.lib.signals.new_bvp import NewBVP
+from emotion_predictor.lib.signals.new_gsr import NewGSR
 
 import pickle
 

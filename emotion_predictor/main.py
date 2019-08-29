@@ -6,15 +6,15 @@ from os import listdir
 from os.path import isfile, join
 import matplotlib.pyplot as plt
 
-from config import DATA_FREQUENCY, NEED_PREPROCESSING, PICKLED_DATA_RESTING, PICKLED_DATA_EMOTIONIZED, \
+from emotion_predictor.config import DATA_FREQUENCY, NEED_PREPROCESSING, PICKLED_DATA_RESTING, PICKLED_DATA_EMOTIONIZED, \
     PICKLED_DATA_PICTURES, OUT_FILE, INITIAL_ESTIMATORS, \
     OPTIMIZED_ESTIMATORS
-from lib.accuracy.cross_validation import MultimodelCrossValidator
-from lib.ai import AI
-from lib.postprocessing import Postprocessing
-from lib.preprocessing import Preprocessing
-from lib.statistics import Statistics
-from lib.predictor import Predictor
+from emotion_predictor.lib.accuracy.cross_validation import MultimodelCrossValidator
+from emotion_predictor.lib.ai import AI
+from emotion_predictor.lib.postprocessing import Postprocessing
+from emotion_predictor.lib.preprocessing import Preprocessing
+from emotion_predictor.lib.statistics import Statistics
+from emotion_predictor.lib.predictor import Predictor
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)

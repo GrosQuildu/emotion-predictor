@@ -5,11 +5,11 @@ from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 
-from config import VALIDATION_SIZE, SEED, OPTIMIZED_ESTIMATORS
-from lib.accuracy.reverse_sbs import ReverseSBS
-from lib.accuracy.sbs import SBS
-from lib.optimizing.grid_search import GridSearchOptimizer
-from lib.prediction_analyser import PredictionAnalyser
+from emotion_predictor.config import VALIDATION_SIZE, SEED, OPTIMIZED_ESTIMATORS
+from emotion_predictor.lib.accuracy.reverse_sbs import ReverseSBS
+from emotion_predictor.lib.accuracy.sbs import SBS
+from emotion_predictor.lib.optimizing.grid_search import GridSearchOptimizer
+from emotion_predictor.lib.prediction_analyser import PredictionAnalyser
 
 
 class AI:

@@ -3,7 +3,7 @@ from statistics import mean
 import matplotlib.pyplot as plt
 import numpy as np
 
-from lib import emotion
+from emotion_predictor.lib import emotion
 
 
 class Analysis:
