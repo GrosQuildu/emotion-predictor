@@ -23,7 +23,7 @@ from emotion_predictor.config import PATH_PICTURES
 from emotion_predictor.config import PICKLED_DATA_RESTING
 from emotion_predictor.config import PICKLED_DATA_EMOTIONIZED
 from emotion_predictor.config import PICKLED_DATA_PICTURES
-from emotionized.config import DO_LOGS
+from emotion_predictor.config import DO_LOGS
 
 TOOLS = {'BITalino': {'BPM.csv':'BVP', 'GSR.csv':'GSR'}}
 FREQ = 128
