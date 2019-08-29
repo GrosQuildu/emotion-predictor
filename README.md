@@ -18,13 +18,13 @@ All you need to do is:
 1. Run `main.py` with Python 3 (prepared for 3.6).
 
 
-#### wshop 19 - GEIST data
+### wshop 19 - GEIST data
 
 ##### Uruchomienie
 
 Najpierw ustawić ścieżki w `emotion_predictor/config.py`. Następnie
 
-```python
+```bash
 mkvirtualenv --python=/usr/bin/python3.7 emotion_predictor
 python ./setup.py build && python ./setup.py install
 
@@ -35,6 +35,7 @@ emotion_predictor_main
 ##### Wykonano
 
 Wstępne przetworzenie danych GEIST
+
     * plik preprocess_geist.py (konfiguracja na początku skryptu)
 
     * korzystanie tylko z pomiarów narzędzia BITalino
@@ -43,6 +44,7 @@ Wstępne przetworzenie danych GEIST
 
     * przetworzenie pliku z nacechowaniem emocjonalnym obrazków (NAPS_valence_arousal_2014.csv)
         ```
+        format danych:
         pictures: dict[picture_name] = {'valence': 1.82, 'arousal': 7.05}
         ```
 
@@ -67,12 +69,13 @@ Wstępne przetworzenie danych GEIST
 
         emotionized: dict[path_to_experiment][picture_names][signal] = [signal_value, signal_value2,...]
         resting: dict[path_to_experiment][signal] = [signal_value, signal_value2,...]
-
-        na przykład:
-
         ```
 
 Poprawa struktury projektu
+
     * dodanie pliku setup.py
 
     * dodanie skryptów wykonywalnych
+    
+Modyfikacja oryginalnego kodu, tak żeby działał z nowymi danymi
+
