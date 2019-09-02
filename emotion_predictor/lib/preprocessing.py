@@ -55,7 +55,7 @@ class Preprocessing:
             errors['malformed_bpm_feature'] += 1
             # something bad with the pulse
 
-        elif 'index -1 is out of bounds for axis 0 with size 0' in str(e):
+        elif 'is out of bounds for axis 0 with size 0' in str(e):
             errors['malformed_gsr_signal'] += 1
             # probably to short data as well
 

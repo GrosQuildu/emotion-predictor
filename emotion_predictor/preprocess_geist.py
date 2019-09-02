@@ -29,9 +29,9 @@ FREQ = 128
 
 MIN_RESTING_TIME = 5  # in seconds, min time before first picture to count as valid experiment
 
-DO_PLOTTING = 1
-DO_LOGS = 1
-PREPROCESS_ONLY = ['B357']  # empty list to plot all
+DO_PLOTTING = 0
+DO_LOGS = 0
+PREPROCESS_ONLY = []  # empty list to process all
 
 
 def filter_experiments(all_experiments_path):
@@ -78,8 +78,16 @@ def filter_experiments(all_experiments_path):
     return experiments
 
 
-def micro_siemens_to_ohm(value):
-        return (10**6)/value
+def gsr_sampled_to_ohm(value):
+    n = 10  # or 6? from https://bitalino.com/datasheets/EDA_Sensor_Datasheet.pdf?fbclid=IwAR0aFtPUAHOAUCTaEO4lBtiJ3UV3RHaIpFeLG4co2rzH-hyoQ_PiN_EglII
+    value = 1/(1 - value/(2**n))
+    return (10**6)/value
+
+def bpm_sampled_to_volt(value):
+    n = 10  # or 6? https://bitalino.com/datasheets/ECG_Sensor_Datasheet.pdf?fbclid=IwAR16NKMJ4cEQYUKFg0FnUo3pWSqamcBAjqtmU4HAtHmetKh13KIk1db3du8
+    vcc = 3.3
+    G_ecg = 1100
+    return ((value/(2**n) - 0.5) * vcc) / G_ecg
 
 
 def is_trail_picture(picture_name):
@@ -184,14 +192,16 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
                 return None
 
             # convert units
-            # GSR microSiemens -> Ohm
+            # GSR BITalino value -> microSiemens
+            # and microSiemens -> Ohm
             if tool == 'BITalino' and signal == 'GSR':
-                log('    Converting GSR microSiemens -> Ohm')
-                data.value = micro_siemens_to_ohm(data.value)
+                log('    Converting GSR data to microSiemens and then to Ohm')
+                data.value = gsr_sampled_to_ohm(data.value)
 
             # BVP microVolt -> nanoWatt?
             # seems to be ok, no need for conversion
             if tool == 'BITalino' and signal == 'BVP':
+                # data.value = bpm_sampled_to_volt(data.value)
                 pass
 
             # sample with correct frequency
