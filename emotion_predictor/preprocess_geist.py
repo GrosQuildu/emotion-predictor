@@ -23,14 +23,16 @@ from emotion_predictor.config import PATH_PICTURES
 from emotion_predictor.config import PICKLED_DATA_RESTING
 from emotion_predictor.config import PICKLED_DATA_EMOTIONIZED
 from emotion_predictor.config import PICKLED_DATA_PICTURES
-from emotion_predictor.config import DO_LOGS
 
 TOOLS = {'BITalino': {'BPM.csv':'BVP', 'GSR.csv':'GSR'}}
 FREQ = 128
 
-MIN_RESTING_TIME = 5  # in second, min time before first picture to count as valid experiment
+MIN_RESTING_TIME = 5  # in seconds, min time before first picture to count as valid experiment
 
-DO_PLOTTING = 0
+DO_PLOTTING = 1
+DO_LOGS = 1
+PREPROCESS_ONLY = ['B357']  # empty list to plot all
+
 
 def filter_experiments(all_experiments_path):
     '''
@@ -187,7 +189,8 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
                 log('    Converting GSR microSiemens -> Ohm')
                 data.value = micro_siemens_to_ohm(data.value)
 
-            # BVP microVolt -> nanoWatt?: todo
+            # BVP microVolt -> nanoWatt?
+            # seems to be ok, no need for conversion
             if tool == 'BITalino' and signal == 'BVP':
                 pass
 
@@ -232,8 +235,11 @@ def preprocess_one_experiment(one_experiment_path, do_plotting=False, do_logs=Fa
                 print('    do plotting {}'.format(signal))
                 prev_plot = plt.plot(resting[signal].index, resting[signal].value, label='resting')
                 for picture_name in pictures.picture:
+                    label = None
+                    if is_trail_picture(picture_name): label = 'trail'
                     plt.plot(emotionized[picture_name][signal].index, emotionized[picture_name][signal].value,
-                                                                        label=None)
+                                                                        label=label)
+                plt.legend(loc='best')
                 plt.show()
 
             # transform DataFrame to list
@@ -322,7 +328,19 @@ def main():
     experiments = filter_experiments(PATH_DATA)
 
     for i, one_experiment_path in enumerate(experiments):
-        if one_experiment_path in all_data_emotionized:
+
+        preprocess_it = True
+        if len(PREPROCESS_ONLY) == 0:
+            # preprocess all data
+            if one_experiment_path in all_data_emotionized:
+                # except already preprocessed
+                preprocess_it = False
+        else:
+            # preprocess only if specified in PREPROCESS_ONLY
+            if not any([po in one_experiment_path for po in PREPROCESS_ONLY]):
+                preprocess_it = False
+
+        if not preprocess_it:
             skipped += 1
             continue
 

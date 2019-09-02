@@ -22,7 +22,8 @@ All you need to do is:
 
 ##### Uruchomienie
 
-Najpierw ustawić ścieżki w `emotion_predictor/config.py`. Następnie
+Najpierw ustawić ścieżki i inne zmienne w `emotion_predictor/config.py` oraz `emotion_predictor/preprocess_geist.py`.
+Następnie:
 
 ```bash
 mkvirtualenv --python=/usr/bin/python3.7 emotion_predictor

@@ -34,6 +34,38 @@ class Preprocessing:
             'labels': loaded[b'labels']
         }
 
+    def handle_preprocess_error(self, e, errors):
+        if 'Not enough RR (peaks-peaks)' in str(e):
+            errors['bpm_to_short_signal'] += 1
+
+        elif 'negative dimensions are not allowed' in str(e):
+            errors['bpm_to_short_signal'] += 1
+
+        elif 'float division by zero' in str(e):
+            errors['bpm_to_short_signal'] += 1
+
+        elif 'Not enough beats to compute heart rate' in str(e):
+            errors['bpm_to_short_signal'] += 1
+
+        elif '(m>k) failed for hidden m: fpcurf0:m=' in str(e):
+            errors['bpm_to_short_signal'] += 1
+        # all above because of too short signal and heartbeat.py weaknesses
+
+        elif 'Malformed data: BPM=' in str(e):
+            errors['malformed_bpm_feature'] += 1
+            # something bad with the pulse
+
+        elif 'index -1 is out of bounds for axis 0 with size 0' in str(e):
+            errors['malformed_gsr_signal'] += 1
+            # probably to short data as well
+
+        elif 'operands could not be broadcast together with shapes' in str(e):
+            errors['malformed_gsr_signal'] += 1
+            # only with B359, GSR signal has gone zero
+
+        else:
+            raise e
+
     def process_person(self, emotionized_file, resting_file, pictures_file, do_logs=False):
         """
         Processes all trials showed to a single person
@@ -56,6 +88,7 @@ class Preprocessing:
             data_pictures = pickle.load(f)
 
         # lecimy po ekperymentach
+        errors = {'bpm_to_short_signal':0, 'malformed_bpm_feature':0, 'malformed_gsr_signal':0}
         for experiment_path in data_emotionized.keys():
             experiment_path_base = basename(experiment_path)
             log('Processing {}'.format(experiment_path_base))
@@ -69,8 +102,9 @@ class Preprocessing:
                 gsr_avg = self.get_base_gsr_features(base_gsr, filename=pj(NEUROKIT_PATH, "avg_{}".format(experiment_path_base)))
             except Exception as e:
                 log(f"    Malformed data when processing baseline of {experiment_path_base}")
-                log("   {}".format(e))
-                continue
+                log("    {}".format(e))
+                self.handle_preprocess_error(e, errors)
+                continue  # resting data is broken - skip whole experiment
 
             person_result = []
             # lecimy po obrazkach
@@ -94,20 +128,13 @@ class Preprocessing:
                     person_result.append(video_result)
                 except Exception as e:
                     log(f"        Malformed data when processing image {picture_name}")
-                    log("       {}".format(e))
-                    common_bugs = ['negative dimensions are not allowed',
-                                    'Malformed data: BPM=',
-                                    'float division by zero',
-                                    'Not enough beats to compute heart rate',
-                                    '(m>k) failed for hidden m']
-                    if do_logs and not any([bug in str(e) for bug in common_bugs]):
-                        traceback.print_exc()
-                        input('...')
-                    continue
+                    log("        {}".format(e))
+                    self.handle_preprocess_error(e, errors)
+                    pass  # emotionized data from one picture is broken - continue to next picture
 
             # zwracamy roznice miedzy danymi z emocjami a spoczynkowymi (bez emocji)
             person_result = self._calculate_feature_diffs(person_result, heart_avg, gsr_avg)
-            yield person_result
+            yield errors, person_result
         
 
 

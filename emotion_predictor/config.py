@@ -9,33 +9,39 @@ from sklearn.tree import DecisionTreeClassifier
 
 from os.path import join as pj
 
-# PATH
+# old/original config
 # DATA_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_preprocessed_python'
 # ORIGINALS_PATH = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\data_original_bdf'
 # OUT_FILE = 'F:\dane inz\DEAP (Database for Emotion Analysis using Physiological Signals)\processed.dat'
 
+
+# base dir for all the data and output files
 BASE_DIR_DATA = '/home/gros/studia/eaiib_5/wshop/data'
 
+# files from experiments
 PATH_DATA = '2018-afcai-spring'
 PATH_PICTURES = 'NAPS_valence_arousal_2014.csv'
 
+# may be any writable path that EXISTS and arbitrary filename
 PICKLED_DATA_RESTING = 'geist_preproc/preprocessed_geist_resting.pickle'
 PICKLED_DATA_EMOTIONIZED = 'geist_preproc/preprocessed_geist_emotionized.pickle'
 PICKLED_DATA_PICTURES = 'geist_preproc/preprocessed_geist_pictures.pickle'
+PICKLED_PREPROCESSED = 'geist_preproc/preprocessed_data.pickle'
 
-NEUROKIT_PATH = 'neurokit'  # whatever dir that exists
+# any writable directory that EXISTS
+NEUROKIT_PATH = 'neurokit'
 
-# ---------- not important
+# ---------- make absolute paths
 PATH_DATA = pj(BASE_DIR_DATA, PATH_DATA)
 PATH_PICTURES = pj(BASE_DIR_DATA, PATH_PICTURES)
 PICKLED_DATA_RESTING = pj(BASE_DIR_DATA, PICKLED_DATA_RESTING)
 PICKLED_DATA_EMOTIONIZED = pj(BASE_DIR_DATA, PICKLED_DATA_EMOTIONIZED)
 PICKLED_DATA_PICTURES = pj(BASE_DIR_DATA, PICKLED_DATA_PICTURES)
 NEUROKIT_PATH = pj(BASE_DIR_DATA, NEUROKIT_PATH)
-OUT_FILE = pj(BASE_DIR_DATA, 'preprocessed_data.dat')
+OUT_FILE = pj(BASE_DIR_DATA, PICKLED_PREPROCESSED)
 # ---------- 
 
-DO_LOGS = 0
+DO_LOGS = 1
 
 # FREQUENCY
 DATA_FREQUENCY = 128

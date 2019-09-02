@@ -236,7 +236,8 @@ class Main:
         num_samples = 0
 
         print("Starting preprocessing")
-        for person in preproc.process_person(PICKLED_DATA_EMOTIONIZED,
+        errors = {'bpm_to_short_signal':0, 'malformed_bpm_feature':0, 'malformed_gsr_signal':0}
+        for errors_tmp, person in preproc.process_person(PICKLED_DATA_EMOTIONIZED,
                                              PICKLED_DATA_RESTING,
                                              PICKLED_DATA_PICTURES,
                                              DO_LOGS):
@@ -246,11 +247,14 @@ class Main:
                 print(f"next done. Got data from {person_sample_count} images.")
                 num_samples += person_sample_count
                 print(f"Has {num_samples} samples already")
+                for k in errors:
+                    errors[k] += errors_tmp[k]
             except Exception:
                 # raise
                 pass
 
         print("Preprocessing finished")
+        print("Errors:", errors)
         NEED_PREPROCESSING = False  # raz powinno wystarczyc afaik
         return people
 
